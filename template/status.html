@@ -1,0 +1,142 @@
+{{define "content"}}
+<div class="container">
+  <div class="status-card" id="order_status_container"
+       data-order-id="{{.Order.ID}}"
+       data-status="{{.Order.Status}}"
+       {{if .Order.PaymentExpiry}}data-expiry-unix="{{.Order.PaymentExpiry.Unix}}"{{end}}>
+
+    <div style="margin-bottom: 16px;">
+      <span style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em;">Status Pesanan</span>
+      <h1 style="font-size: 1.5rem; font-weight: 800; margin-top: 4px; letter-spacing: -0.02em;">{{.Order.ID}}</h1>
+    </div>
+
+    <!-- Status Badge -->
+    <div style="margin-bottom: 22px;">
+      <span id="live_status_badge" class="status-badge {{statusBadgeClass .Order.Status}}">
+        {{.Order.StatusBadge}}
+      </span>
+    </div>
+
+    <!-- QRIS section if pending_payment -->
+    {{if eq .Order.Status "pending_payment"}}
+    <div id="payment_section">
+      <p style="font-size: 0.88rem; color: var(--text-muted); max-width: 420px; margin: 0 auto;">
+        Scan kode QRIS di bawah menggunakan GoPay, OVO, Dana, ShopeePay, atau Mobile Banking:
+      </p>
+
+      <div class="qr-wrapper">
+        <img id="qris_image_element" src="{{.Order.PaymentQRURL}}" alt="QRIS Payment" class="qr-image" onerror="this.src='https://api.qrserver.com/v1/create-qr-code/?size=250x250&data={{.Order.PaymentQRString}}'">
+      </div>
+
+      <div class="qr-mobile-actions">
+        <a href="{{.Order.PaymentQRURL}}" download="qris-azeotopup-{{.Order.ID}}.png" target="_blank" class="btn-qr-action">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          <span>Unduh QRIS</span>
+        </a>
+        <button type="button" class="btn-qr-action" onclick="copyToClipboard('{{.Order.ID}}', 'ID Pesanan berhasil disalin!')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          <span>Salin ID Order</span>
+        </button>
+      </div>
+
+      <div>
+        <div class="countdown-box">
+          <span>Sisa Waktu Bayar:</span>
+          <span id="countdown_timer" style="font-family: var(--font-mono); font-weight: 700;">15:00</span>
+        </div>
+      </div>
+
+      {{if .Order.PaymentCheckoutURL}}
+      <p style="margin-top: 6px;">
+        <a href="{{.Order.PaymentCheckoutURL}}" target="_blank" class="nav-btn" style="font-size: 0.8rem; padding: 7px 16px;">
+          Buka Link Pembayaran &nearr;
+        </a>
+      </p>
+      {{end}}
+
+      <!-- Mobile Guide for QRIS payment -->
+      <div class="mobile-pay-guide">
+        <div class="guide-title">
+          <span>💡 Cara Bayar di HP Tanpa Perlu Scan Kamera</span>
+        </div>
+        <ol class="guide-steps">
+          <li>Klik tombol <strong>Unduh QRIS</strong> atau screenshot layar ini.</li>
+          <li>Buka aplikasi e-Wallet kamu (<strong>GoPay, DANA, OVO, ShopeePay, atau BCA</strong>).</li>
+          <li>Pilih menu <strong>Scan QR</strong> &rarr; pilih <strong>Unggah dari Galeri</strong>.</li>
+          <li>Pilih gambar QRIS tadi dan selesaikan pembayaran. Halaman ini akan otomatis terupdate!</li>
+        </ol>
+      </div>
+    </div>
+    {{end}}
+
+    <!-- Success section -->
+    <div id="live_sn_container" style="{{if ne .Order.Status "success"}}display: none;{{end}} margin: 20px 0; padding: 18px; background: var(--success-bg); border: 1px solid var(--success-border); border-radius: var(--radius-sm); text-align: left;">
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+        <strong style="color: var(--success-text); font-size: 0.98rem;">Top-Up Selesai & Berhasil</strong>
+      </div>
+      <p style="font-size: 0.88rem; color: var(--success-text);">
+        Serial Number (SN): <strong id="live_sn_text" style="font-family: var(--font-mono);">{{if .Order.DigiflazzSN}}{{.Order.DigiflazzSN}}{{else}}-{{end}}</strong>
+      </p>
+      {{if .Order.DigiflazzMessage}}
+      <p style="font-size: 0.8rem; color: var(--success-text); margin-top: 4px;">{{.Order.DigiflazzMessage}}</p>
+      {{end}}
+      {{if .Order.CustomerEmail}}
+      <p style="font-size: 0.82rem; color: var(--success-text); margin-top: 6px; background: rgba(16, 185, 129, 0.1); padding: 6px 10px; border-radius: 6px; display: inline-block;">
+        Bukti pembayaran telah dikirimkan ke <strong>{{.Order.CustomerEmail}}</strong>
+      </p>
+      {{end}}
+    </div>
+
+    <!-- Order Details Table -->
+    <table class="detail-table">
+      <tbody>
+        <tr>
+          <td>Game</td>
+          <td>{{.Order.GameName}}</td>
+        </tr>
+        <tr>
+          <td>Akun Tujuan</td>
+          <td>{{.Order.FullCustomerNo}}</td>
+        </tr>
+        {{if .Order.CustomerEmail}}
+        <tr>
+          <td>Email Pembeli</td>
+          <td>{{.Order.CustomerEmail}}</td>
+        </tr>
+        {{end}}
+        <tr>
+          <td>Produk</td>
+          <td>{{.Order.ProductName}}</td>
+        </tr>
+        <tr>
+          <td>Total Bayar</td>
+          <td style="font-size: 1.1rem; color: var(--text-main);">{{formatRupiah .Order.Price}}</td>
+        </tr>
+        <tr>
+          <td>Waktu Order</td>
+          <td>{{formatDateTime .Order.CreatedAt}}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Dev Simulation Button -->
+    {{if eq .Order.Status "pending_payment"}}
+    <div class="sim-box">
+      <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; letter-spacing: 0.05em;">
+        Mode Pengujian / Simulasi
+      </div>
+      <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">
+        Tekan tombol di bawah untuk menyimulasikan pembayaran QRIS berhasil tanpa perlu scan e-wallet.
+      </p>
+      <button type="button" id="btn_simulate_pay" class="btn-checkout" style="width: 100%; margin-top: 0; padding: 11px; font-size: 0.88rem; background: #2563EB;">
+        Simulasikan Pembayaran Berhasil
+      </button>
+    </div>
+    {{end}}
+
+    <div style="margin-top: 28px;">
+      <a href="/" style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">&larr; Kembali ke Beranda</a>
+    </div>
+  </div>
+</div>
+{{end}}

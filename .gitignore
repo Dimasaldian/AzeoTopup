@@ -1,0 +1,45 @@
+# Environment & Secrets (CRITICAL)
+.env
+.env.*
+!.env.example
+cookies.txt
+*.log
+
+# Binaries & Executables
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+topupku
+topupku.exe
+*.test
+*.out
+
+# Databases & Runtime Data
+data/*.db
+data/*.db-wal
+data/*.db-shm
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+
+# Uploads & Media Storage
+uploads/games/*
+!uploads/games/.gitkeep
+!data/.gitkeep
+
+# IDE, OS, & Temporary files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Internal Documentation & PRD
+PRD*.md
+*PRD*
+

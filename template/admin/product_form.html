@@ -1,0 +1,143 @@
+{{define "content"}}
+<div style="max-width: 700px; margin: 0 auto;">
+  <div style="margin-bottom: 20px;">
+    <a href="/admin/games/{{.Product.GameID}}/products" style="font-size: 0.85rem; font-weight: 600; color: var(--admin-muted);">&larr; Kembali ke Daftar Produk</a>
+    <h1 style="font-size: 1.35rem; font-weight: 800; margin-top: 6px;">Edit Produk: {{.Product.EffectiveName}}</h1>
+  </div>
+
+  <div class="card" style="padding: 26px;">
+    <form action="/admin/products/{{.Product.ID}}" method="POST">
+      
+      <!-- Digiflazz Read-Only Info -->
+      <div style="background: #F8FAFC; border: 1px solid var(--admin-border); padding: 16px 18px; border-radius: 8px; margin-bottom: 22px;">
+        <h4 style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--admin-muted); letter-spacing: 0.06em; margin-bottom: 10px;">
+          Data Provider (Digiflazz)
+        </h4>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.82rem;">
+          <div>SKU: <code>{{.Product.DigiflazzSKU}}</code></div>
+          <div>Harga Modal: <strong>{{formatRupiah .Product.CostPrice}}</strong></div>
+          <div>Nama Asli: <span>{{.Product.DigiflazzName}}</span></div>
+          <div>Status Stok: <span class="badge badge-success">{{.Product.StockStatus}}</span></div>
+        </div>
+      </div>
+
+      <!-- Custom Settings -->
+      <div class="form-group">
+        <label class="form-label" for="display_name">Nama Tampilan Produk *</label>
+        <input type="text" id="display_name" name="display_name" class="form-input" value="{{.Product.DisplayName}}" placeholder="Contoh: 86 Diamond" required>
+        <small style="color: var(--admin-muted); font-size: 0.75rem;">Nama yang tampil di halaman etalase pembeli.</small>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="custom_sku">Kode Produk Custom (SKU Internal)</label>
+        <input type="text" id="custom_sku" name="custom_sku" class="form-input" value="{{.Product.CustomSKU}}" placeholder="Contoh: TK-ML-86">
+        <small style="color: var(--admin-muted); font-size: 0.75rem;">Kode SKU internal sistem. Kosongkan jika ingin memakai SKU asli provider.</small>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="group_id">Kategori / Grup Produk (Misal: Membership & Pass vs Top Up Diamond)</label>
+        <select id="group_id" name="group_id" class="form-input">
+          <option value="">-- Gunakan Grup Otomatis / Buat Baru --</option>
+          {{range .Groups}}
+          <option value="{{.ID}}" {{if eq $.Product.SafeGroupID .ID}}selected{{else if eq $.Product.GroupName .Name}}selected{{end}}>{{.Name}}</option>
+          {{end}}
+        </select>
+        <div style="margin-top: 6px;">
+          <input type="text" name="new_group_name" class="form-input" placeholder="Atau ketik nama kategori baru di sini">
+        </div>
+        <small style="color: var(--admin-muted); font-size: 0.75rem;">Pisahkan antara produk Pass (Weekly Diamond Pass, Starlight) dan Top Up Diamond biasa.</small>
+      </div>
+
+      <!-- Pricing Logic -->
+      <div style="background: #FFFFFF; border: 1px solid var(--admin-border); border-radius: 8px; padding: 18px; margin-bottom: 22px;">
+        <h3 style="font-size: 0.9rem; font-weight: 800; margin-bottom: 12px;">Metode Penetapan Harga Jual</h3>
+
+        <div class="form-group">
+          <div style="display: flex; gap: 20px; font-size: 0.85rem;">
+            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+              <input type="radio" name="margin_type" value="fixed" {{if eq .Product.MarginType "fixed"}}checked{{end}}>
+              <span>Margin Fixed (Rp)</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+              <input type="radio" name="margin_type" value="percent" {{if eq .Product.MarginType "percent"}}checked{{end}}>
+              <span>Margin Persen (%)</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+              <input type="radio" name="margin_type" value="manual" {{if eq .Product.MarginType "manual"}}checked{{end}}>
+              <span>Harga Jual Manual</span>
+            </label>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="margin_value">Nilai Margin (Rp atau %)</label>
+            <input type="number" id="margin_value" name="margin_value" class="form-input" value="{{.Product.MarginValue}}">
+            <span class="form-help">Jika persen: min untung Rp 500 (aman dari fee QRIS) & bulat ke Rp 100.</span>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="manual_sell_price">Harga Jual Manual (Rp)</label>
+            <input type="number" id="manual_sell_price" name="manual_sell_price" class="form-input" value="{{.Product.SellPrice}}">
+          </div>
+        </div>
+      </div>
+
+      <!-- Flash Sale / Promo Kuota Terbatas -->
+      <div style="background: #FFFDFD; border: 1.5px solid #FCA5A5; border-radius: 8px; padding: 18px; margin-bottom: 22px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+          <h3 style="font-size: 0.95rem; font-weight: 800; color: #DC2626; margin: 0; display: flex; align-items: center; gap: 6px;">
+            <span>🔥</span> Program Promo Kuota Terbatas (Flash Sale)
+          </h3>
+          <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.88rem; font-weight: 700; background: #FEE2E2; padding: 4px 10px; border-radius: 6px; color: #991B1B;">
+            <input type="checkbox" name="is_promo" value="1" {{if .Product.IsPromo}}checked{{end}}>
+            <span>Aktifkan Promo Ini</span>
+          </label>
+        </div>
+        <p style="font-size: 0.8rem; color: var(--admin-muted); margin-bottom: 14px;">
+          Cocok untuk promo khusus: <strong>"5 Orang Tercepat Dapat Harga Diskon Khusus Hari Ini"</strong>. Sistem otomatis menghitung mundur sisa kuota, dan harga akan otomatis kembali ke harga normal saat kuota habis.
+        </p>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px;">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="promo_price" style="color: #991B1B;">Harga Promo Diskon (Rp) *</label>
+            <input type="number" id="promo_price" name="promo_price" class="form-input" value="{{if .Product.PromoPrice}}{{.Product.PromoPrice}}{{end}}" placeholder="Contoh: 25000" style="border-color: #FCA5A5;">
+            <span class="form-help">Harga normal: {{formatRupiah .Product.SellPrice}}</span>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="promo_quota">Total Kuota Pembeli (Orang) *</label>
+            <input type="number" id="promo_quota" name="promo_quota" class="form-input" value="{{if .Product.PromoQuota}}{{.Product.PromoQuota}}{{else}}5{{end}}" placeholder="Misal: 5">
+            <span class="form-help">Berapa orang yang berhak dapat diskon</span>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="promo_remaining">Sisa Kuota Saat Ini</label>
+            <input type="number" id="promo_remaining" name="promo_remaining" class="form-input" value="{{if .Product.IsPromo}}{{.Product.PromoRemaining}}{{else if .Product.PromoQuota}}{{.Product.PromoQuota}}{{else}}5{{end}}" placeholder="Misal: 5">
+            <span class="form-help">Bisa diubah/di-reset ulang kapan saja</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Status Flags -->
+      <div style="margin-bottom: 24px; display: flex; gap: 24px;">
+        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.88rem; font-weight: 700;">
+          <input type="checkbox" name="is_active" value="1" {{if .Product.IsActive}}checked{{end}}>
+          <span>Aktif di Frontend</span>
+        </label>
+        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.88rem; font-weight: 700;">
+          <input type="checkbox" name="is_popular" value="1" {{if .Product.IsPopular}}checked{{end}}>
+          <span>Tandai sebagai Populer</span>
+        </label>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px;">
+        <a href="/admin/games/{{.Product.GameID}}/products" class="btn btn-outline">Batal</a>
+        <button type="submit" class="btn btn-primary" style="padding: 9px 22px;">
+          Simpan Perubahan
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{{end}}

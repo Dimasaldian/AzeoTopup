@@ -1,0 +1,116 @@
+{{define "content"}}
+<div>
+  <div style="margin-bottom: 20px;">
+    <a href="/admin/games/{{.Game.ID}}/products" style="font-size: 0.85rem; font-weight: 600; color: var(--admin-muted);">&larr; Kembali ke Produk {{.Game.Name}}</a>
+    <h1 style="font-size: 1.35rem; font-weight: 800; margin-top: 6px;">
+      Import Produk Digiflazz: {{.Game.Name}}
+    </h1>
+    <p style="font-size: 0.82rem; color: var(--admin-muted); margin-top: 4px;">
+      Price list dari provider untuk brand: <strong>{{.Game.Brand}}</strong> ({{.TotalFound}} produk ditemukan).
+    </p>
+  </div>
+
+  <form action="/admin/games/{{.Game.ID}}/products/import" method="POST">
+    <!-- Top config bar -->
+    <div class="card" style="padding: 16px 20px; margin-bottom: 18px; background: #F8FAFC;">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <input type="checkbox" id="check_all" style="width: 16px; height: 16px; cursor: pointer;">
+          <label for="check_all" style="font-size: 0.85rem; font-weight: 700; cursor: pointer;">Pilih Semua Produk Baru</label>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 0.82rem; font-weight: 700; color: var(--admin-muted);">Margin Default:</span>
+          <select name="default_margin_type" class="filter-input" style="padding: 5px 8px; font-size: 0.8rem;">
+            <option value="percent" {{if eq .DefaultMarginType "percent"}}selected{{end}}>Persentase (%)</option>
+            <option value="fixed" {{if eq .DefaultMarginType "fixed"}}selected{{end}}>Fixed (Rp)</option>
+          </select>
+          <input type="number" name="default_margin_value" value="{{.DefaultMarginValue}}" class="filter-input" style="width: 70px; padding: 5px 8px; font-size: 0.8rem;" required>
+          <span style="font-size: 0.75rem; color: var(--admin-muted);">(Min untung Rp 500, bulat Rp 100)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table of Digiflazz products -->
+    <div class="card">
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width: 40px;">Pilih</th>
+              <th>Status</th>
+              <th>SKU Provider</th>
+              <th>Nama Provider</th>
+              <th>Harga Modal</th>
+              <th>Nama Tampilan</th>
+              <th>SKU Custom</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{range .ImportList}}
+            <tr style="{{if .IsImported}}background: #F8FAFC; opacity: 0.75;{{end}}">
+              <td>
+                <input type="checkbox" name="sku" value="{{.BuyerSKUCode}}" class="sku-checkbox" {{if not .IsImported}}checked{{end}}>
+                <input type="hidden" name="cost_{{.BuyerSKUCode}}" value="{{.Price}}">
+                <input type="hidden" name="name_{{.BuyerSKUCode}}" value="{{.ProductName}}">
+              </td>
+              <td>
+                {{if .IsImported}}
+                <span class="badge badge-success">Sudah Ada</span>
+                {{else}}
+                <span class="badge badge-info">Baru</span>
+                {{end}}
+              </td>
+              <td>
+                <code>{{.BuyerSKUCode}}</code>
+              </td>
+              <td>
+                <div style="font-size: 0.82rem; font-weight: 600;">{{.ProductName}}</div>
+              </td>
+              <td>
+                <strong>{{formatRupiah .Price}}</strong>
+              </td>
+              <td>
+                <input type="text" name="display_name_{{.BuyerSKUCode}}" class="form-input" style="padding: 4px 8px; font-size: 0.8rem; width: 160px;" placeholder="Nama bersih...">
+              </td>
+              <td>
+                <input type="text" name="custom_sku_{{.BuyerSKUCode}}" class="form-input" style="padding: 4px 8px; font-size: 0.8rem; width: 130px;" value="{{.ExistingCustom}}" placeholder="TK-...">
+              </td>
+            </tr>
+            {{else}}
+            <tr>
+              <td colspan="7" style="text-align: center; color: var(--admin-muted); padding: 40px;">
+                Tidak ada produk ditemukan untuk brand "{{.Game.Brand}}". Pastikan nama brand pada pengaturan game sudah tepat.
+              </td>
+            </tr>
+            {{end}}
+          </tbody>
+        </table>
+      </div>
+
+      <div style="padding: 18px 22px; border-top: 1px solid var(--admin-border); display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 0.82rem; color: var(--admin-muted);">
+          Produk yang dipilih akan langsung tersimpan dan aktif di database.
+        </span>
+        <button type="submit" class="btn btn-primary" style="padding: 9px 24px;">
+          Import Produk Terpilih
+        </button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const checkAll = document.getElementById("check_all");
+  const checkboxes = document.querySelectorAll(".sku-checkbox");
+  if (checkAll) {
+    checkAll.addEventListener("change", function() {
+      checkboxes.forEach(cb => {
+        cb.checked = checkAll.checked;
+      });
+    });
+  }
+});
+</script>
+{{end}}

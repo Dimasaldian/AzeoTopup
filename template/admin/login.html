@@ -1,0 +1,37 @@
+{{define "content"}}
+<div style="width: 100%; max-width: 380px; padding: 20px;">
+  <div class="card" style="padding: 32px;">
+    <div style="text-align: center; margin-bottom: 24px;">
+      <div style="display: inline-flex; width: 36px; height: 36px; background: #0F172A; color: #FFFFFF; border-radius: 8px; align-items: center; justify-content: center; font-weight: 800; font-size: 0.95rem; margin-bottom: 12px;">AZ</div>
+      <h1 style="font-size: 1.35rem; font-weight: 800; letter-spacing: -0.02em;">Azeotopup Console</h1>
+      <p style="font-size: 0.82rem; color: var(--admin-muted); margin-top: 4px;">Masuk ke panel administrasi sistem</p>
+    </div>
+
+    {{if .Error}}
+    <div class="alert alert-error" style="margin-bottom: 18px; padding: 10px 14px; font-size: 0.85rem;">
+      {{.Error}}
+    </div>
+    {{end}}
+
+    <form action="/admin/login" method="POST">
+      <div class="form-group">
+        <label class="form-label" for="username">Username</label>
+        <input type="text" id="username" name="username" class="form-input" placeholder="admin" required autofocus>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="password">Password</label>
+        <input type="password" id="password" name="password" class="form-input" placeholder="••••••••" required>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width: 100%; padding: 11px; margin-top: 8px;">
+        Masuk
+      </button>
+    </form>
+
+    <div style="margin-top: 20px; text-align: center; font-size: 0.78rem; color: var(--admin-muted);">
+      Default credential: <code>admin</code> / <code>admin123</code>
+    </div>
+  </div>
+</div>
+{{end}}

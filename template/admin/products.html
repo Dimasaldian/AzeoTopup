@@ -1,0 +1,153 @@
+{{define "content"}}
+<div>
+  <!-- Header Breadcrumb & Actions -->
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; flex-wrap: wrap; gap: 12px;">
+    <div>
+      <div style="font-size: 0.82rem; color: var(--admin-muted); margin-bottom: 4px;">
+        <a href="/admin/games">&larr; Kembali ke Katalog Game</a> / {{.Game.Name}}
+      </div>
+      <h1 style="font-size: 1.3rem; font-weight: 800;">Produk: {{.Game.Name}}</h1>
+    </div>
+
+    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+      <a href="/admin/games/{{.Game.ID}}/products/import" class="btn btn-primary">
+        Import Produk Digiflazz
+      </a>
+      <a href="/admin/games/{{.Game.ID}}/edit" class="btn btn-outline">
+        Edit Game
+      </a>
+    </div>
+  </div>
+
+  <!-- Bulk Action Bar -->
+  <div class="card" style="padding: 14px 20px; margin-bottom: 18px; background: #F8FAFC;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+      <!-- Bulk Toggle -->
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 0.82rem; font-weight: 700; color: var(--admin-muted);">Status Massal:</span>
+        <form action="/admin/products/bulk-toggle" method="POST" style="margin: 0; display: inline;">
+          <input type="hidden" name="game_id" value="{{.Game.ID}}">
+          <input type="hidden" name="action" value="enable">
+          <button type="submit" class="btn btn-outline btn-sm">Aktifkan Semua</button>
+        </form>
+        <form action="/admin/products/bulk-toggle" method="POST" style="margin: 0; display: inline;">
+          <input type="hidden" name="game_id" value="{{.Game.ID}}">
+          <input type="hidden" name="action" value="disable">
+          <button type="submit" class="btn btn-outline btn-sm">Nonaktifkan Semua</button>
+        </form>
+      </div>
+
+      <!-- Bulk Margin -->
+      <form action="/admin/products/bulk-margin" method="POST" style="display: flex; align-items: center; gap: 8px; margin: 0;">
+        <input type="hidden" name="game_id" value="{{.Game.ID}}">
+        <span style="font-size: 0.82rem; font-weight: 700; color: var(--admin-muted);">Set Margin Massal:</span>
+        <select name="margin_type" class="filter-input" style="padding: 4px 8px; font-size: 0.8rem;">
+          <option value="percent" {{if eq .CurrentMarginType "percent"}}selected{{end}}>Persentase (%)</option>
+          <option value="fixed" {{if eq .CurrentMarginType "fixed"}}selected{{end}}>Fixed (Rp)</option>
+        </select>
+        <input type="number" name="margin_value" value="{{.CurrentMarginValue}}" placeholder="Nilai (% atau Rp)" class="filter-input" style="width: 130px; padding: 4px 8px; font-size: 0.8rem;" required>
+        <button type="submit" class="btn btn-primary btn-sm">Terapkan</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Product Table -->
+  <div class="card">
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Status</th>
+            <th>SKU Digiflazz</th>
+            <th>Custom SKU</th>
+            <th>Nama Tampilan</th>
+            <th>Harga Modal</th>
+            <th>Harga Jual</th>
+            <th>Margin Profit</th>
+            <th style="text-align: right;">Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{range .Products}}
+          <tr>
+            <td>
+              <form action="/admin/products/{{.ID}}/toggle" method="POST" style="margin: 0;">
+                <button type="submit" class="badge {{if .IsActive}}badge-success{{else}}badge-pending{{end}}" style="cursor: pointer; border: none;">
+                  {{if .IsActive}}Aktif{{else}}Nonaktif{{end}}
+                </button>
+              </form>
+            </td>
+            <td>
+              <code>{{.DigiflazzSKU}}</code>
+              <div style="font-size: 0.75rem; color: var(--admin-muted); margin-top: 2px;">{{.DigiflazzName}}</div>
+            </td>
+            <td>
+              {{if .CustomSKU}}
+              <code>{{.CustomSKU}}</code>
+              {{else}}
+              <span style="color: var(--admin-muted); font-size: 0.78rem;">-</span>
+              {{end}}
+            </td>
+            <td>
+              <div style="font-weight: 700;">{{.EffectiveName}}</div>
+              <div style="display: flex; gap: 4px; margin-top: 3px; flex-wrap: wrap;">
+                {{if .GroupName}}<span class="badge" style="background: #EEF2FF; color: #4F46E5; font-size: 0.65rem;">{{.GroupName}}</span>{{end}}
+                {{if .IsPopular}}<span class="badge badge-warning" style="font-size: 0.65rem;">Populer</span>{{end}}
+              </div>
+            </td>
+            <td>{{formatRupiah .CostPrice}}</td>
+            <td>
+              {{if .HasActivePromo}}
+              <strong style="color: #DC2626;">{{formatRupiah .PromoPrice}}</strong>
+              <div style="font-size: 0.72rem; color: #DC2626; font-weight: 700; margin-top: 2px;">
+                🔥 Promo (Sisa {{.PromoRemaining}}/{{.PromoQuota}})
+              </div>
+              <div style="font-size: 0.7rem; color: var(--admin-muted); text-decoration: line-through;">
+                Normal: {{formatRupiah .SellPrice}}
+              </div>
+              {{else if and .IsPromo (le .PromoRemaining 0)}}
+              <strong>{{formatRupiah .SellPrice}}</strong>
+              <div style="font-size: 0.7rem; color: #6B7280; margin-top: 2px;">
+                Promo Habis (0/{{.PromoQuota}})
+              </div>
+              {{else}}
+              <strong>{{formatRupiah .SellPrice}}</strong>
+              {{end}}
+            </td>
+            <td>
+              <span style="color: #166534; font-weight: 700;">
+                +{{formatRupiah (sub .SellPrice .CostPrice)}}
+              </span>
+              <div style="font-size: 0.72rem; color: var(--admin-muted);">
+                {{if eq .MarginType "fixed"}}Fixed (+{{.MarginValue}})
+                {{else if eq .MarginType "percent"}}Persen (+{{.MarginValue}}%)
+                {{else}}Manual{{end}}
+              </div>
+            </td>
+            <td style="text-align: right;">
+              <div style="display: inline-flex; gap: 6px;">
+                <a href="/admin/products/{{.ID}}/edit" class="btn btn-outline btn-sm">Edit</a>
+                <form action="/admin/products/{{.ID}}/delete" method="POST" onsubmit="return confirm('Hapus produk ini?');" style="margin: 0;">
+                  <button type="submit" class="btn btn-outline btn-sm" style="color: #EF4444; border-color: #FECACA;">Hapus</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {{else}}
+          <tr>
+            <td colspan="8" style="text-align: center; color: var(--admin-muted); padding: 40px;">
+              <p>Belum ada produk untuk game ini.</p>
+              <div style="margin-top: 14px;">
+                <a href="/admin/games/{{.Game.ID}}/products/import" class="btn btn-primary">
+                  Import Produk Sekarang dari Digiflazz
+                </a>
+              </div>
+            </td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{{end}}

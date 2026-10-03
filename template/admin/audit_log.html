@@ -1,0 +1,45 @@
+{{define "content"}}
+<div>
+  <div style="margin-bottom: 22px;">
+    <h1 style="font-size: 1.3rem; font-weight: 800;">Audit Log Aktivitas</h1>
+    <p style="font-size: 0.82rem; color: var(--admin-muted); margin-top: 2px;">
+      Catatan audit seluruh perubahan data, transaksi, sinkronisasi, dan otentikasi admin.
+    </p>
+  </div>
+
+  <div class="card">
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width: 170px;">Waktu</th>
+            <th>Operator</th>
+            <th>Aksi</th>
+            <th>Entity</th>
+            <th>ID Target</th>
+            <th>Detail Perubahan</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{range .Logs}}
+          <tr>
+            <td style="font-size: 0.78rem; color: var(--admin-muted);">{{formatDateTime .CreatedAt}}</td>
+            <td><strong>{{.AdminUsername}}</strong></td>
+            <td><code>{{.Action}}</code></td>
+            <td><span class="badge badge-info">{{.EntityType}}</span></td>
+            <td><code>{{.EntityID}}</code></td>
+            <td style="font-size: 0.82rem;">{{.NewValue}}</td>
+          </tr>
+          {{else}}
+          <tr>
+            <td colspan="6" style="text-align: center; color: var(--admin-muted); padding: 36px;">
+              Belum ada log aktivitas tercatat.
+            </td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{{end}}

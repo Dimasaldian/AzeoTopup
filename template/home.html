@@ -1,0 +1,141 @@
+{{define "content"}}
+<div class="container">
+  <!-- Promotional / Ads Banner Carousel Space -->
+  <section class="promo-section">
+    <div class="banner-carousel" id="promo_carousel">
+      <div class="banner-track" id="banner_track">
+        
+        <!-- Banner Slide 1 (Special Promo) -->
+        <div class="banner-slide">
+          <div class="banner-content">
+            <span class="banner-badge">PROMO SPESIAL HARI INI</span>
+            <h2 class="banner-title">Cashback Top Up Hingga 25%</h2>
+            <p class="banner-subtitle">
+              Gunakan pembayaran via QRIS untuk semua game favorit Anda. Proses instan otomatis masuk ke akun dalam 1 menit.
+            </p>
+            <a href="/game/ml" class="banner-btn">Top Up Sekarang &rarr;</a>
+          </div>
+          <div class="banner-decoration">
+            <div style="width: 140px; height: 140px; border-radius: 20px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-weight: 800; color: #E2E8F0;">
+              25%
+            </div>
+          </div>
+        </div>
+
+        <!-- Banner Slide 2 (MLBB Weekly Pass) -->
+        <div class="banner-slide slide-alt">
+          <div class="banner-content">
+            <span class="banner-badge">HOT DEAL</span>
+            <h2 class="banner-title">Mobile Legends Weekly Diamond Pass</h2>
+            <p class="banner-subtitle">
+              Dapatkan total hingga 220 Diamond + bonus eksklusif setiap minggu dengan harga termurah se-Indonesia.
+            </p>
+            <a href="/game/ml" class="banner-btn">Beli Weekly Pass &rarr;</a>
+          </div>
+          <div class="banner-decoration">
+            <div style="width: 140px; height: 140px; border-radius: 20px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: 800; text-align: center; padding: 12px; color: #E2E8F0;">
+              MLBB PASS
+            </div>
+          </div>
+        </div>
+
+        <!-- Banner Slide 3 (General Announcement / Ads) -->
+        <div class="banner-slide slide-dark">
+          <div class="banner-content">
+            <span class="banner-badge">LAYANAN RESMI</span>
+            <h2 class="banner-title">Layanan Top-Up Game 24 Jam Nonstop</h2>
+            <p class="banner-subtitle">
+              Sistem backend otomatis terhubung langsung dengan server provider resmi. Tanpa antri, aman, dan bergaransi refund.
+            </p>
+            <a href="#games" class="banner-btn">Lihat Semua Game &rarr;</a>
+          </div>
+          <div class="banner-decoration">
+            <div style="width: 140px; height: 140px; border-radius: 20px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: 800; color: #E2E8F0;">
+              24/7
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Slide Dots -->
+      <div class="banner-indicators">
+        <span class="banner-dot active" onclick="goToSlide(0)"></span>
+        <span class="banner-dot" onclick="goToSlide(1)"></span>
+        <span class="banner-dot" onclick="goToSlide(2)"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Game Section -->
+  <section id="games">
+    <div class="section-title-wrap">
+      <div>
+        <h1 class="section-heading">Pilih Game</h1>
+        <p style="font-size: 0.88rem; color: var(--text-muted); margin-top: 2px;">Pilih game untuk mulai mengisi diamond atau voucher</p>
+      </div>
+      <span class="section-count">{{len .Games}} Game Tersedia</span>
+    </div>
+
+    <!-- Mobile-First Search Bar -->
+    <div class="game-search-box">
+      <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <input type="text" id="game_search_input" class="game-search-input" placeholder="Ketik nama game... (ML, Free Fire, PUBG, dll)" autocomplete="off">
+      <button type="button" id="game_search_clear" class="game-search-clear" style="display: none;" aria-label="Hapus pencarian">&times;</button>
+    </div>
+
+    <div class="game-grid" id="game_grid">
+      {{range .Games}}
+      <a href="/game/{{.Code}}" class="game-card" data-name="{{.Name}}" data-code="{{.Code}}">
+        <div class="game-card-img-wrap">
+          <img src="{{.IconPath}}" alt="{{.Name}}" class="game-card-img" onerror="this.src='https://images.unsplash.com/photo-1542751371-adc38448a05e?w=128&q=80'" loading="lazy">
+          <span class="game-img-badge">{{.ProductCount}} Nominal</span>
+        </div>
+        <div class="game-card-body">
+          <h2 class="game-card-title">{{.Name}}</h2>
+          <p class="game-card-desc">{{.Description}}</p>
+          <div class="game-card-footer">
+            <span class="game-badge">{{.ProductCount}} Nominal</span>
+            <span class="btn-topup">Top Up &rarr;</span>
+          </div>
+        </div>
+      </a>
+      {{else}}
+      <div style="grid-column: 1 / -1; padding: 60px 0; text-align: center; color: var(--text-muted);">
+        <p>Belum ada game yang aktif saat ini.</p>
+        <p style="margin-top: 14px;"><a href="/admin" class="nav-btn">Buka Admin untuk Menambah Game</a></p>
+      </div>
+      {{end}}
+    </div>
+    <div id="no_game_found" style="display: none; padding: 40px 16px; text-align: center; color: var(--text-muted); background: var(--bg-card); border-radius: var(--radius-md); border: 1px dashed var(--border-medium);">
+      <p style="font-weight: 700; font-size: 1rem; color: var(--text-main);">Game tidak ditemukan</p>
+      <p style="font-size: 0.85rem; margin-top: 4px;">Coba gunakan kata kunci lain.</p>
+    </div>
+  </section>
+</div>
+
+<script>
+function goToSlide(index) {
+  const track = document.getElementById("banner_track");
+  const dots = document.querySelectorAll(".banner-dot");
+  if (!track) return;
+  const slideWidth = track.clientWidth;
+  track.scrollTo({ left: slideWidth * index, behavior: "smooth" });
+  dots.forEach((dot, idx) => {
+    dot.classList.toggle("active", idx === index);
+  });
+}
+
+// Auto rotate banner every 5 seconds
+document.addEventListener("DOMContentLoaded", function() {
+  const track = document.getElementById("banner_track");
+  if (!track) return;
+  let currentSlide = 0;
+  const totalSlides = 3;
+  setInterval(function() {
+    currentSlide = (currentSlide + 1) % totalSlides;
+    goToSlide(currentSlide);
+  }, 5000);
+});
+</script>
+{{end}}

@@ -1,0 +1,276 @@
+{{define "content"}}
+<div class="container">
+  <!-- Back button -->
+  <div style="padding-top: 24px;">
+    <a href="/" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.88rem; font-weight: 600; color: var(--text-muted);">&larr; Kembali ke Beranda</a>
+  </div>
+
+  <form id="order_form">
+    <input type="hidden" id="game_code" value="{{.Game.Code}}">
+    <input type="hidden" id="selected_product_id" value="">
+
+    <div class="topup-layout">
+      <!-- Main Content (Steps) -->
+      <div class="topup-main">
+        <!-- Game Intro Banner -->
+        <div class="section-box" style="display: flex; align-items: center; gap: 20px;">
+          <img src="{{.Game.IconPath}}" alt="{{.Game.Name}}" style="width: 72px; height: 72px; border-radius: 12px; object-fit: cover; border: 1px solid var(--border-light);" onerror="this.src='https://images.unsplash.com/photo-1542751371-adc38448a05e?w=128&q=80'">
+          <div>
+            <h1 style="font-size: 1.6rem; font-weight: 800; letter-spacing: -0.02em;">{{.Game.Name}}</h1>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 4px;">{{.Game.Description}}</p>
+          </div>
+        </div>
+
+        <div id="form_error_alert" class="alert alert-error" style="display: none;"></div>
+
+        <!-- Step 1: Input Account ID -->
+        <div class="section-box">
+          <div class="section-header">
+            <span class="step-num">1</span>
+            <h2 class="section-title">Data Akun Game</h2>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label" for="customer_no">{{.Game.IDLabel}} *</label>
+              <input type="text" id="customer_no" class="form-control" placeholder="{{.Game.IDPlaceholder}}" required {{if .Game.IDFormatRegex}}pattern="{{.Game.IDFormatRegex}}"{{end}}>
+              {{if .Game.IDHelpText}}<span class="form-help">{{.Game.IDHelpText}}</span>{{end}}
+            </div>
+
+            {{if .Game.ID2Label}}
+            <div class="form-group">
+              <label class="form-label" for="customer_no2">{{.Game.ID2Label}}</label>
+              <input type="text" id="customer_no2" class="form-control" placeholder="{{.Game.ID2Placeholder}}">
+              <span class="form-help">Masukkan Zone atau Server ID Anda</span>
+            </div>
+            {{end}}
+          </div>
+        </div>
+
+        <!-- Step 2: Choose Product -->
+        <div class="section-box" id="section-products">
+          <div class="section-header">
+            <span class="step-num">2</span>
+            <h2 class="section-title">Pilih Produk & Nominal</h2>
+          </div>
+
+          {{if .PromoProducts}}
+          <!-- Flash Sale Container (Top Priority & Rame) -->
+          <div class="flash-sale-container">
+            <div class="flash-sale-top-bar">
+              <div class="flash-title-area">
+                <span class="flash-live-tag">🔥 FLASH SALE</span>
+                <span class="flash-title-text">Promo Khusus Hari Ini</span>
+              </div>
+              <div class="flash-timer-badge">
+                <span>⚡ Kuota Terbatas</span>
+              </div>
+            </div>
+
+            <div class="flash-sale-cards">
+              {{range .PromoProducts}}
+              <div class="product-card flash-deal-card" 
+                   data-id="{{.ID}}" 
+                   data-name="{{.EffectiveName}}" 
+                   data-price="{{.EffectivePrice}}" 
+                   data-formatted-price="{{formatRupiah .EffectivePrice}}"
+                   data-is-promo="true"
+                   data-original-price="{{formatRupiah .OriginalPrice}}">
+                
+                <div class="flash-card-header">
+                  <span class="flash-save-badge">HEMAT {{formatRupiah (sub .OriginalPrice .EffectivePrice)}}</span>
+                  <span class="flash-stock-pill">🔥 {{.PromoRemaining}} Slot</span>
+                </div>
+
+                <div class="flash-card-main">
+                  <div class="flash-item-name">{{.EffectiveName}}</div>
+                  <div class="flash-price-box">
+                    <span class="flash-current-price">{{formatRupiah .EffectivePrice}}</span>
+                    <span class="flash-struck-price">{{formatRupiah .OriginalPrice}}</span>
+                  </div>
+                </div>
+
+                <!-- Progress Bar: makin berkurang stok, garis makin penuh (Shopee style) -->
+                <div class="flash-progress-section">
+                  <div class="flash-progress-track">
+                    <div class="flash-progress-bar" style="width: {{percentSold .PromoRemaining .PromoQuota}}%;"></div>
+                  </div>
+                  <div class="flash-progress-labels">
+                    <span>Terjual {{sub .PromoQuota .PromoRemaining}} kuota</span>
+                    <span class="flash-progress-remaining">Sisa {{.PromoRemaining}}</span>
+                  </div>
+                </div>
+              </div>
+              {{end}}
+            </div>
+          </div>
+          {{end}}
+
+          {{if gt (len .GroupNames) 1}}
+          <!-- Category Filter Tabs -->
+          <div class="category-tabs">
+            <button type="button" class="category-tab active" data-category="all">
+              Semua ({{len .Products}})
+            </button>
+            {{range $groupName := .GroupNames}}
+            <button type="button" class="category-tab" data-category="{{$groupName}}">
+              {{if eq $groupName "Membership & Pass"}}🎟️
+              {{else if eq $groupName "Top Up Diamond"}}💎
+              {{else if eq $groupName "Top Up UC"}}🪙
+              {{else}}⭐{{end}}
+              {{$groupName}} ({{len (index $.GroupedProducts $groupName)}})
+            </button>
+            {{end}}
+          </div>
+          {{end}}
+
+          {{range $groupName := .GroupNames}}
+          <div class="product-group-section" data-group="{{$groupName}}" style="margin-bottom: 28px;">
+            <div class="product-group-header">
+              <span class="product-group-icon">
+                {{if eq $groupName "Membership & Pass"}}🎟️
+                {{else if eq $groupName "Top Up Diamond"}}💎
+                {{else if eq $groupName "Top Up UC"}}🪙
+                {{else}}⭐{{end}}
+              </span>
+              <h3 class="product-group-title">{{$groupName}}</h3>
+              <span class="product-group-count">{{len (index $.GroupedProducts $groupName)}} Pilihan</span>
+            </div>
+            <div class="product-grid">
+              {{range index $.GroupedProducts $groupName}}
+              <div class="product-card {{if eq $groupName "Membership & Pass"}}product-card-pass{{end}} {{if .HasActivePromo}}product-card-promo{{end}}" 
+                   data-id="{{.ID}}" 
+                   data-name="{{.EffectiveName}}" 
+                   data-price="{{.EffectivePrice}}" 
+                   data-formatted-price="{{formatRupiah .EffectivePrice}}"
+                   data-is-promo="{{if .HasActivePromo}}true{{else}}false{{end}}"
+                   data-original-price="{{formatRupiah .OriginalPrice}}">
+                
+                {{if .HasActivePromo}}
+                <span class="product-promo-badge">Hemat {{formatRupiah (sub .OriginalPrice .EffectivePrice)}}</span>
+                {{else if and .IsPromo (le .PromoRemaining 0)}}
+                <span class="product-soldout-badge">Promo Habis</span>
+                {{else if .IsPopular}}
+                <span class="product-popular-badge">Populer</span>
+                {{end}}
+
+                <div>
+                  <div class="product-card-name">{{.EffectiveName}}</div>
+                  {{if .HasActivePromo}}
+                  <div class="flash-progress-section" style="margin-top: 6px;">
+                    <div class="flash-progress-track">
+                      <div class="flash-progress-bar" style="width: {{percentSold .PromoRemaining .PromoQuota}}%;"></div>
+                    </div>
+                    <div class="flash-progress-labels">
+                      <span>Terjual {{sub .PromoQuota .PromoRemaining}}</span>
+                      <span class="flash-progress-remaining">Sisa {{.PromoRemaining}}</span>
+                    </div>
+                  </div>
+                  {{end}}
+                </div>
+
+                <div>
+                  {{if .HasActivePromo}}
+                  <div class="product-price-row">
+                    <span class="product-card-price">{{formatRupiah .EffectivePrice}}</span>
+                    <span class="product-card-original">{{formatRupiah .OriginalPrice}}</span>
+                  </div>
+                  {{else}}
+                  <div class="product-card-price">{{formatRupiah .SellPrice}}</div>
+                  {{end}}
+                </div>
+              </div>
+              {{end}}
+            </div>
+          </div>
+          {{else}}
+          <p style="color: var(--text-muted); text-align: center; padding: 20px;">Belum ada produk aktif untuk game ini.</p>
+          {{end}}
+        </div>
+
+        <!-- Step 3: Email Bukti Pembelian -->
+        <div class="section-box">
+          <div class="section-header">
+            <span class="step-num">3</span>
+            <h2 class="section-title">Email Penerima Invoice</h2>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="customer_email">Alamat Email Pembeli *</label>
+            <input type="email" id="customer_email" class="form-control" placeholder="nama@email.com" required autocomplete="email">
+            <span class="form-help">Wajib diisi. Invoice resmi, rincian pembayaran QRIS, dan Serial Number (SN) item game akan otomatis dikirim ke email ini setelah pembayaran berhasil.</span>
+          </div>
+        </div>
+
+        <!-- Step 4: Instructions -->
+        {{if .Game.InstructionText}}
+        <div class="section-box">
+          <div class="section-header">
+            <span class="step-num">4</span>
+            <h2 class="section-title">Petunjuk Pengisian</h2>
+          </div>
+          <div style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.7;">
+            {{safeHTML .Game.InstructionText}}
+          </div>
+        </div>
+        {{end}}
+      </div>
+
+      <!-- Right Summary Sidebar -->
+      <aside>
+        <div class="summary-box">
+          <h3 class="summary-title">Ringkasan Pesanan</h3>
+
+          <div class="summary-row">
+            <span>Game</span>
+            <strong style="color: var(--text-main);">{{.Game.Name}}</strong>
+          </div>
+          <div class="summary-row">
+            <span>Item</span>
+            <strong id="summary_product_name" style="color: var(--text-main);">- Belum dipilih -</strong>
+          </div>
+          <div class="summary-row">
+            <span>Harga</span>
+            <span id="summary_price">Rp 0</span>
+          </div>
+          <div id="summary_promo_row" class="summary-row" style="display: none; background: #FEF2F2; padding: 6px 10px; border-radius: 6px; margin: 6px 0; border: 1px dashed #FCA5A5;">
+            <span style="color: #DC2626; font-weight: 700; font-size: 0.78rem;">🔥 Flash Sale</span>
+            <strong style="color: #DC2626; font-size: 0.78rem;">Harga Diskon Spesial</strong>
+          </div>
+          <div class="summary-row">
+            <span>Metode Bayar</span>
+            <strong style="color: var(--text-main);">QRIS Otomatis</strong>
+          </div>
+
+          <div class="summary-row total">
+            <span>Total Bayar</span>
+            <span id="summary_total">Rp 0</span>
+          </div>
+
+          <button type="submit" id="btn_checkout" class="btn-checkout" disabled>
+            Lanjutkan Pembayaran &rarr;
+          </button>
+
+          <p style="font-size: 0.75rem; color: var(--text-muted); text-align: center; margin-top: 14px;">
+            Terverifikasi resmi via QRIS Bank Indonesia
+          </p>
+        </div>
+      </aside>
+    </div>
+
+    <!-- Floating Mobile Bottom Checkout Bar (UniPin / Codashop Style) -->
+    <div class="mobile-checkout-bar" id="mobile_checkout_bar">
+      <div class="mobile-checkout-info">
+        <span class="mobile-checkout-label">Total Pembayaran</span>
+        <div class="mobile-checkout-price-row">
+          <span class="mobile-checkout-price" id="mobile_summary_total">Rp 0</span>
+        </div>
+        <span class="mobile-checkout-item" id="mobile_summary_product">- Pilih Nominal -</span>
+      </div>
+      <button type="button" id="btn_mobile_checkout" class="btn-mobile-checkout" disabled>
+        <span>Beli Sekarang</span>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+      </button>
+    </div>
+  </form>
+</div>
+{{end}}

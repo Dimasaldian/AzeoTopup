@@ -1,0 +1,139 @@
+{{define "content"}}
+<div style="max-width: 800px; margin: 0 auto;">
+  <div style="margin-bottom: 20px;">
+    <a href="/admin/games" style="font-size: 0.85rem; font-weight: 600; color: var(--admin-muted);">&larr; Kembali ke Daftar Game</a>
+    <h1 style="font-size: 1.35rem; font-weight: 800; margin-top: 6px;">
+      {{if .IsEdit}}Edit Game: {{.Game.Name}}{{else}}Tambah Game Baru{{end}}
+    </h1>
+  </div>
+
+  <div class="card" style="padding: 26px;">
+    <form action="{{if .IsEdit}}/admin/games/{{.Game.ID}}{{else}}/admin/games{{end}}" method="POST" enctype="multipart/form-data">
+      
+      <!-- Basic Details -->
+      <div style="margin-bottom: 22px;">
+        <h3 style="font-size: 0.95rem; font-weight: 800; margin-bottom: 16px; border-bottom: 1px solid var(--admin-border); padding-bottom: 6px;">
+          Informasi Utama
+        </h3>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="form-group">
+            <label class="form-label" for="name">Nama Game *</label>
+            <input type="text" id="name" name="name" class="form-input" value="{{.Game.Name}}" placeholder="Contoh: Mobile Legends" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="code">Kode Slug URL *</label>
+            <input type="text" id="code" name="code" class="form-input" value="{{.Game.Code}}" placeholder="Contoh: ml" required>
+            <small style="color: var(--admin-muted); font-size: 0.75rem;">Akan digunakan di URL: <code>/game/{slug}</code></small>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="brand">Brand Digiflazz *</label>
+          <input type="text" id="brand" name="brand" class="form-input" value="{{.Game.Brand}}" placeholder="Contoh: MOBILE LEGENDS" required>
+          <small style="color: var(--admin-muted); font-size: 0.75rem;">
+            Harus sesuai dengan nama brand di Digiflazz Price List agar sinkronisasi dan import berfungsi.
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="description">Deskripsi Singkat</label>
+          <textarea id="description" name="description" class="form-textarea" rows="2" placeholder="Deskripsi ringkas game">{{.Game.Description}}</textarea>
+        </div>
+      </div>
+
+      <!-- Input Account ID Configuration -->
+      <div style="margin-bottom: 22px;">
+        <h3 style="font-size: 0.95rem; font-weight: 800; margin-bottom: 16px; border-bottom: 1px solid var(--admin-border); padding-bottom: 6px;">
+          Konfigurasi Input Akun
+        </h3>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="form-group">
+            <label class="form-label" for="id_label">Label ID Utama *</label>
+            <input type="text" id="id_label" name="id_label" class="form-input" value="{{.Game.IDLabel}}" placeholder="Contoh: User ID / UID" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="id_placeholder">Placeholder ID Utama</label>
+            <input type="text" id="id_placeholder" name="id_placeholder" class="form-input" value="{{.Game.IDPlaceholder}}" placeholder="Contoh: Masukkan ID akun">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="form-group">
+            <label class="form-label" for="id_help_text">Teks Bantuan ID</label>
+            <input type="text" id="id_help_text" name="id_help_text" class="form-input" value="{{.Game.IDHelpText}}" placeholder="Contoh: Buka profil game untuk melihat ID">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="id_format_regex">Regex Validasi Format ID</label>
+            <input type="text" id="id_format_regex" name="id_format_regex" class="form-input" value="{{.Game.IDFormatRegex}}" placeholder="Contoh: ^\d{5,12}$">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="form-group">
+            <label class="form-label" for="id2_label">Label ID Tambahan (Opsional)</label>
+            <input type="text" id="id2_label" name="id2_label" class="form-input" value="{{.Game.ID2Label}}" placeholder="Contoh: Zone ID / Server (kosongkan jika tidak ada)">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="id2_placeholder">Placeholder ID Tambahan</label>
+            <input type="text" id="id2_placeholder" name="id2_placeholder" class="form-input" value="{{.Game.ID2Placeholder}}" placeholder="Contoh: 1234">
+          </div>
+        </div>
+      </div>
+
+      <!-- Media & Icons -->
+      <div style="margin-bottom: 22px;">
+        <h3 style="font-size: 0.95rem; font-weight: 800; margin-bottom: 16px; border-bottom: 1px solid var(--admin-border); padding-bottom: 6px;">
+          Ikon & Media
+        </h3>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="form-group">
+            <label class="form-label" for="icon_file">Upload Ikon Game</label>
+            <input type="file" id="icon_file" name="icon_file" class="form-input" accept="image/*">
+            <small style="color: var(--admin-muted); font-size: 0.75rem;">Atau masukkan URL gambar jika tidak upload file:</small>
+            <input type="url" id="icon_url" name="icon_url" class="form-input" value="{{.Game.IconPath}}" placeholder="https://..." style="margin-top: 6px;">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="banner_file">Upload Banner (Opsional)</label>
+            <input type="file" id="banner_file" name="banner_file" class="form-input" accept="image/*">
+            <input type="url" id="banner_url" name="banner_url" class="form-input" value="{{.Game.BannerPath}}" placeholder="https://..." style="margin-top: 6px;">
+          </div>
+        </div>
+      </div>
+
+      <!-- Instructions Text -->
+      <div style="margin-bottom: 22px;">
+        <h3 style="font-size: 0.95rem; font-weight: 800; margin-bottom: 16px; border-bottom: 1px solid var(--admin-border); padding-bottom: 6px;">
+          Petunjuk Pembelian
+        </h3>
+        <div class="form-group">
+          <label class="form-label" for="instruction_text">Instruksi Langkah Top Up (HTML didukung)</label>
+          <textarea id="instruction_text" name="instruction_text" class="form-textarea" rows="4">{{.Game.InstructionText}}</textarea>
+        </div>
+      </div>
+
+      <!-- Status -->
+      <div style="margin-bottom: 24px;">
+        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.88rem; font-weight: 700;">
+          <input type="checkbox" name="is_active" value="1" {{if .Game.IsActive}}checked{{end}}>
+          <span>Aktifkan Game di Frontend</span>
+        </label>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px;">
+        <a href="/admin/games" class="btn btn-outline">Batal</a>
+        <button type="submit" class="btn btn-primary" style="padding: 9px 22px;">
+          Simpan Game
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{{end}}

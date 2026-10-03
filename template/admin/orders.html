@@ -1,0 +1,108 @@
+{{define "content"}}
+<div>
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px;">
+    <div>
+      <h1 style="font-size: 1.3rem; font-weight: 800;">Data Pesanan</h1>
+      <p style="font-size: 0.82rem; color: var(--admin-muted); margin-top: 2px;">
+        Total <strong>{{.Total}}</strong> pesanan tercatat dalam database.
+      </p>
+    </div>
+  </div>
+
+  <!-- Filter & Search Bar -->
+  <div class="card" style="padding: 14px 18px; margin-bottom: 18px;">
+    <form method="GET" action="/admin/orders" class="filter-bar" style="margin: 0;">
+      <input type="text" name="q" value="{{.Search}}" placeholder="Cari Order ID / Akun / SN..." class="filter-input" style="width: 240px;">
+      
+      <select name="status" class="filter-input">
+        <option value="">Semua Status</option>
+        <option value="pending_payment" {{if eq .StatusFilter "pending_payment"}}selected{{end}}>Menunggu Pembayaran</option>
+        <option value="paid" {{if eq .StatusFilter "paid"}}selected{{end}}>Sudah Dibayar</option>
+        <option value="processing" {{if eq .StatusFilter "processing"}}selected{{end}}>Sedang Diproses</option>
+        <option value="success" {{if eq .StatusFilter "success"}}selected{{end}}>Sukses</option>
+        <option value="failed" {{if eq .StatusFilter "failed"}}selected{{end}}>Gagal</option>
+        <option value="expired" {{if eq .StatusFilter "expired"}}selected{{end}}>Kadaluarsa</option>
+        <option value="refund" {{if eq .StatusFilter "refund"}}selected{{end}}>Refund</option>
+      </select>
+
+      <select name="game" class="filter-input">
+        <option value="">Semua Game</option>
+        {{range .Games}}
+        <option value="{{.Code}}" {{if eq $.GameFilter .Code}}selected{{end}}>{{.Name}}</option>
+        {{end}}
+      </select>
+
+      <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+      <a href="/admin/orders" class="btn btn-outline btn-sm">Reset</a>
+    </form>
+  </div>
+
+  <!-- Orders Table -->
+  <div class="card">
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>Waktu</th>
+            <th>Game</th>
+            <th>Akun Pelanggan</th>
+            <th>Produk</th>
+            <th>Total Bayar</th>
+            <th>Status</th>
+            <th style="text-align: right;">Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{range .Orders}}
+          <tr>
+            <td>
+              <a href="/admin/orders/{{.ID}}" style="font-family: var(--font-mono); font-weight: 700; color: #0F172A;">
+                {{.ID}}
+              </a>
+              {{if .DigiflazzSN}}
+              <div style="font-size: 0.72rem; color: var(--admin-muted); font-family: var(--font-mono); margin-top: 2px;">SN: {{.DigiflazzSN}}</div>
+              {{end}}
+            </td>
+            <td>{{formatDateTime .CreatedAt}}</td>
+            <td><strong>{{.GameName}}</strong></td>
+            <td><code>{{.FullCustomerNo}}</code></td>
+            <td>{{.ProductName}}</td>
+            <td><strong>{{formatRupiah .Price}}</strong></td>
+            <td>
+              <span class="badge {{statusBadgeClass .Status}}">{{.StatusBadge}}</span>
+            </td>
+            <td style="text-align: right;">
+              <a href="/admin/orders/{{.ID}}" class="btn btn-outline btn-sm">Detail &rarr;</a>
+            </td>
+          </tr>
+          {{else}}
+          <tr>
+            <td colspan="8" style="text-align: center; color: var(--admin-muted); padding: 36px;">
+              Tidak ada pesanan yang sesuai dengan kriteria filter.
+            </td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    {{if gt .TotalPages 1}}
+    <div style="padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--admin-border);">
+      <span style="font-size: 0.82rem; color: var(--admin-muted);">
+        Halaman {{.Page}} dari {{.TotalPages}}
+      </span>
+      <div style="display: flex; gap: 6px;">
+        {{if gt .Page 1}}
+        <a href="/admin/orders?page={{sub .Page 1}}&status={{.StatusFilter}}&game={{.GameFilter}}&q={{.Search}}" class="btn btn-outline btn-sm">&larr; Sebelumnya</a>
+        {{end}}
+        {{if lt .Page .TotalPages}}
+        <a href="/admin/orders?page={{add .Page 1}}&status={{.StatusFilter}}&game={{.GameFilter}}&q={{.Search}}" class="btn btn-outline btn-sm">Selanjutnya &rarr;</a>
+        {{end}}
+      </div>
+    </div>
+    {{end}}
+  </div>
+</div>
+{{end}}

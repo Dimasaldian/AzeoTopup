@@ -1,0 +1,133 @@
+{{define "content"}}
+<div style="max-width: 900px; margin: 0 auto;">
+  <div style="margin-bottom: 20px;">
+    <a href="/admin/orders" style="font-size: 0.85rem; font-weight: 600; color: var(--admin-muted);">&larr; Kembali ke Semua Pesanan</a>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
+      <h1 style="font-size: 1.35rem; font-weight: 800;">Pesanan: <span style="font-family: var(--font-mono);">{{.Order.ID}}</span></h1>
+      <span class="badge {{statusBadgeClass .Order.Status}}" style="font-size: 0.82rem; padding: 5px 12px;">
+        {{.Order.StatusBadge}}
+      </span>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+    <!-- Left Column: Details -->
+    <div>
+      <!-- Product & Customer Box -->
+      <div class="card" style="padding: 22px; margin-bottom: 20px;">
+        <h3 class="card-title" style="margin-bottom: 14px;">Detail Transaksi</h3>
+        <table class="detail-table">
+          <tbody>
+            <tr>
+              <td>Game:</td>
+              <td><strong>{{.Order.GameName}}</strong></td>
+            </tr>
+            <tr>
+              <td>ID Akun:</td>
+              <td><code>{{.Order.CustomerNo}}</code></td>
+            </tr>
+            {{if .Order.CustomerNo2}}
+            <tr>
+              <td>Zone / Server ID:</td>
+              <td><code>{{.Order.CustomerNo2}}</code></td>
+            </tr>
+            {{end}}
+            <tr>
+              <td>Produk:</td>
+              <td>{{.Order.ProductName}}</td>
+            </tr>
+            <tr>
+              <td>Harga Jual (User):</td>
+              <td><strong>{{formatRupiah .Order.Price}}</strong></td>
+            </tr>
+            <tr>
+              <td>Harga Modal (Digiflazz):</td>
+              <td>{{formatRupiah .Order.Cost}}</td>
+            </tr>
+            <tr>
+              <td>Estimasi Margin:</td>
+              <td style="color: #166534; font-weight: 700;">+{{formatRupiah (sub .Order.Price .Order.Cost)}}</td>
+            </tr>
+            <tr>
+              <td>Waktu Dibuat:</td>
+              <td>{{formatDateTime .Order.CreatedAt}}</td>
+            </tr>
+            <tr>
+              <td>Terakhir Update:</td>
+              <td>{{formatDateTime .Order.UpdatedAt}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Provider & Gateway Details -->
+      <div class="card" style="padding: 22px; margin-bottom: 20px;">
+        <h3 class="card-title" style="margin-bottom: 14px;">Integrasi Gateway & Provider</h3>
+        <table class="detail-table">
+          <tbody>
+            <tr>
+              <td>AutoGoPay Trx ID:</td>
+              <td><code style="word-break: break-all;">{{if .Order.PaymentTrxID}}{{.Order.PaymentTrxID}}{{else}}-{{end}}</code></td>
+            </tr>
+            <tr>
+              <td>Expiry QRIS:</td>
+              <td>{{formatDateTimePtr .Order.PaymentExpiry}}</td>
+            </tr>
+            <tr>
+              <td>Digiflazz Ref ID:</td>
+              <td><code>{{if .Order.DigiflazzRefID}}{{.Order.DigiflazzRefID}}{{else}}-{{end}}</code></td>
+            </tr>
+            <tr>
+              <td>Digiflazz Status:</td>
+              <td><strong>{{if .Order.DigiflazzStatus}}{{.Order.DigiflazzStatus}}{{else}}-{{end}}</strong></td>
+            </tr>
+            <tr>
+              <td>Serial Number (SN):</td>
+              <td><strong style="color: #166534; font-family: var(--font-mono);">{{if .Order.DigiflazzSN}}{{.Order.DigiflazzSN}}{{else}}-{{end}}</strong></td>
+            </tr>
+            <tr>
+              <td>Pesan Provider:</td>
+              <td><span>{{if .Order.DigiflazzMessage}}{{.Order.DigiflazzMessage}}{{else}}-{{end}}</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Right Column: Admin Actions & Notes -->
+    <div>
+      <div class="card" style="padding: 18px; margin-bottom: 18px;">
+        <h3 class="card-title" style="margin-bottom: 12px; font-size: 0.9rem;">Tindakan Pesanan</h3>
+
+        <!-- Retry Topup Button -->
+        <form action="/admin/orders/{{.Order.ID}}/retry" method="POST" onsubmit="return confirm('Kirim ulang request topup ke Digiflazz?');" style="margin-bottom: 10px;">
+          <button type="submit" class="btn btn-primary" style="width: 100%;">
+            Retry Top-Up Digiflazz
+          </button>
+        </form>
+
+        <!-- Refund Button -->
+        <form action="/admin/orders/{{.Order.ID}}/refund" method="POST" onsubmit="return confirm('Tandai pesanan ini sebagai Refund?');">
+          <input type="hidden" name="note" value="Refund disetujui manual oleh admin">
+          <button type="submit" class="btn btn-outline" style="width: 100%; color: #EF4444; border-color: #FECACA;">
+            Tandai Sebagai Refund
+          </button>
+        </form>
+      </div>
+
+      <!-- Admin Note Box -->
+      <div class="card" style="padding: 18px;">
+        <h3 class="card-title" style="margin-bottom: 10px; font-size: 0.9rem;">Catatan Admin</h3>
+        <form action="/admin/orders/{{.Order.ID}}/note" method="POST">
+          <div class="form-group">
+            <textarea name="note" class="form-textarea" rows="4" placeholder="Catatan internal transaksi...">{{.Order.AdminNote}}</textarea>
+          </div>
+          <button type="submit" class="btn btn-primary btn-sm" style="width: 100%;">
+            Simpan Catatan
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{{end}}

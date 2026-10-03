@@ -1,0 +1,84 @@
+{{define "content"}}
+<div>
+  <!-- Metrics Grid -->
+  <div class="metrics-grid">
+    <div class="metric-card">
+      <div class="metric-label">Pesanan Hari Ini</div>
+      <div class="metric-value">{{.Stats.TodayOrderCount}}</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Pendapatan Hari Ini</div>
+      <div class="metric-value">{{formatRupiah .Stats.TodayRevenue}}</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Estimasi Margin Hari Ini</div>
+      <div class="metric-value" style="color: #166534;">{{formatRupiah .Stats.TodayProfit}}</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Saldo Digiflazz</div>
+      <div class="metric-value">{{formatRupiah .Stats.DigiflazzBalance}}</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Game Aktif</div>
+      <div class="metric-value">{{.Stats.ActiveGameCount}}</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Produk Aktif</div>
+      <div class="metric-value">{{.Stats.ActiveProductCount}}</div>
+    </div>
+  </div>
+
+  <!-- Recent Orders Card -->
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title">Pesanan Terakhir</h3>
+      <a href="/admin/orders" class="btn btn-outline btn-sm">Semua Pesanan &rarr;</a>
+    </div>
+
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>Waktu</th>
+            <th>Game</th>
+            <th>Akun Pelanggan</th>
+            <th>Produk</th>
+            <th>Total</th>
+            <th>Status</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{range .RecentOrders}}
+          <tr>
+            <td>
+              <a href="/admin/orders/{{.ID}}" style="font-family: var(--font-mono); font-weight: 700; color: #0F172A;">
+                {{.ID}}
+              </a>
+            </td>
+            <td>{{formatDateTime .CreatedAt}}</td>
+            <td><strong>{{.GameName}}</strong></td>
+            <td><code>{{.FullCustomerNo}}</code></td>
+            <td>{{.ProductName}}</td>
+            <td><strong>{{formatRupiah .Price}}</strong></td>
+            <td>
+              <span class="badge {{statusBadgeClass .Status}}">{{.StatusBadge}}</span>
+            </td>
+            <td>
+              <a href="/admin/orders/{{.ID}}" class="btn btn-outline btn-sm">Lihat Detail</a>
+            </td>
+          </tr>
+          {{else}}
+          <tr>
+            <td colspan="8" style="text-align: center; color: var(--admin-muted); padding: 32px;">
+              Belum ada data pesanan.
+            </td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{{end}}
