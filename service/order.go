@@ -2,7 +2,9 @@ package service
 
 import (
 	"crypto/rand"
+	"errors"
 	"fmt"
+	"log"
 	"math/big"
 	"strings"
 	"time"
@@ -38,7 +40,13 @@ func (s *OrderService) GenerateOrderID() string {
 	return fmt.Sprintf("TK-%s-%s", datePart, string(randPart))
 }
 
+// CreateOrder creates a guest QRIS order (kept for backward compatibility).
 func (s *OrderService) CreateOrder(gameCode string, customerNo, customerNo2, customerEmail string, productID int64) (*model.Order, error) {
+	return s.CreateOrderFor(gameCode, customerNo, customerNo2, customerEmail, productID, nil, model.PaymentMethodQRIS)
+}
+
+// CreateOrderFor creates an order for an optional logged-in user with the chosen payment method.
+func (s *OrderService) CreateOrderFor(gameCode string, customerNo, customerNo2, customerEmail string, productID int64, user *model.User, paymentMethod string) (*model.Order, error) {
 	game, err := s.store.GetGameByCode(gameCode)
 	if err != nil {
 		return nil, fmt.Errorf("game tidak ditemukan")
@@ -61,6 +69,9 @@ func (s *OrderService) CreateOrder(gameCode string, customerNo, customerNo2, cus
 	customerNo = strings.TrimSpace(customerNo)
 	customerNo2 = strings.TrimSpace(customerNo2)
 	customerEmail = strings.TrimSpace(customerEmail)
+	if customerEmail == "" && user != nil {
+		customerEmail = user.Email
+	}
 	if customerNo == "" {
 		return nil, fmt.Errorf("nomor ID akun wajib diisi")
 	}
@@ -71,10 +82,30 @@ func (s *OrderService) CreateOrder(gameCode string, customerNo, customerNo2, cus
 		return nil, fmt.Errorf("format alamat email tidak valid")
 	}
 
+	if paymentMethod == "" {
+		paymentMethod = model.PaymentMethodQRIS
+	}
+	if paymentMethod != model.PaymentMethodQRIS && paymentMethod != model.PaymentMethodAZcoin {
+		return nil, fmt.Errorf("metode pembayaran tidak dikenal")
+	}
+
+	var userID int64
+	if user != nil {
+		userID = user.ID
+	}
+
 	orderID := s.GenerateOrderID()
 
 	// Use EffectivePrice (takes PromoPrice if flash sale promo is active)
 	finalPrice := product.EffectivePrice()
+
+	if paymentMethod == model.PaymentMethodAZcoin {
+		if user == nil {
+			return nil, fmt.Errorf("silakan login terlebih dahulu untuk bayar dengan AZcoin")
+		}
+		azPrice := model.AZcoinPrice(finalPrice, product.CostPrice, s.store.GetAZcoinDiscountPercent())
+		return s.createAZcoinOrder(orderID, game, product, customerNo, customerNo2, customerEmail, userID, azPrice)
+	}
 
 	// Generate QRIS via AutoGoPay
 	qrisData, err := s.autogopay.GenerateQRIS(orderID, finalPrice)
@@ -110,6 +141,8 @@ func (s *OrderService) CreateOrder(gameCode string, customerNo, customerNo2, cus
 		PaymentQRString:    qrisData.QRString,
 		PaymentExpiry:      expiryTime,
 		DigiflazzRefID:     orderID,
+		UserID:             userID,
+		PaymentMethod:      model.PaymentMethodQRIS,
 	}
 
 	if err := s.store.CreateOrder(order); err != nil {
@@ -119,6 +152,55 @@ func (s *OrderService) CreateOrder(gameCode string, customerNo, customerNo2, cus
 	order.GameName = game.Name
 	order.GameCode = game.Code
 	return order, nil
+}
+
+func (s *OrderService) createAZcoinOrder(orderID string, game *model.Game, product *model.Product, customerNo, customerNo2, customerEmail string, userID int64, price int) (*model.Order, error) {
+	order := &model.Order{
+		ID:             orderID,
+		GameID:         game.ID,
+		CustomerNo:     customerNo,
+		CustomerNo2:    customerNo2,
+		CustomerEmail:  customerEmail,
+		ProductID:      product.ID,
+		ProductName:    product.EffectiveName(),
+		Price:          price,
+		Cost:           product.CostPrice,
+		Status:         model.StatusPaid,
+		PaymentTrxID:   "AZC-" + orderID,
+		DigiflazzRefID: orderID,
+		UserID:         userID,
+		PaymentMethod:  model.PaymentMethodAZcoin,
+	}
+
+	if err := s.store.CreateAZcoinOrder(order); err != nil {
+		if errors.Is(err, store.ErrInsufficientBalance) {
+			return nil, fmt.Errorf("saldo AZcoin kamu tidak cukup, silakan redeem voucher dulu")
+		}
+		return nil, fmt.Errorf("gagal membuat pesanan: %w", err)
+	}
+
+	_ = s.store.DeductProductPromoQuota(order.ProductID)
+
+	order.GameName = game.Name
+	order.GameCode = game.Code
+
+	// Paid instantly from wallet: fire the top-up in the background so the user is redirected right away.
+	go func(o model.Order) {
+		if err := s.ExecuteTopUp(&o); err != nil {
+			log.Printf("[AZcoin] Top-up for %s failed: %v", o.ID, err)
+		}
+	}(*order)
+
+	return order, nil
+}
+
+// refundIfAZcoin returns AZcoin to the user's wallet when an AZcoin-paid order fails.
+func (s *OrderService) refundIfAZcoin(orderID, reason string) {
+	if ok, err := s.store.RefundAZcoinOrder(orderID, reason); err != nil {
+		log.Printf("[AZcoin] Refund for %s failed: %v", orderID, err)
+	} else if ok {
+		log.Printf("[AZcoin] Refunded order %s to user wallet", orderID)
+	}
 }
 
 func (s *OrderService) ProcessPaymentReceived(paymentTrxID string) error {
@@ -162,6 +244,7 @@ func (s *OrderService) ExecuteTopUp(order *model.Order) error {
 	if err != nil {
 		_ = s.store.UpdateOrderDigiflazz(order.ID, order.ID, "Gagal", "", err.Error())
 		_ = s.store.UpdateOrderStatus(order.ID, model.StatusFailed)
+		s.refundIfAZcoin(order.ID, "Refund otomatis: top-up gagal dikirim")
 		return err
 	}
 
@@ -181,6 +264,10 @@ func (s *OrderService) ExecuteTopUp(order *model.Order) error {
 	order.Status = finalStatus
 	order.DigiflazzSN = dfResp.Data.SN
 	order.DigiflazzMessage = dfResp.Data.Message
+
+	if finalStatus == model.StatusFailed {
+		s.refundIfAZcoin(order.ID, "Refund otomatis: top-up gagal")
+	}
 
 	if finalStatus == model.StatusSuccess && s.email != nil && order.CustomerEmail != "" {
 		go func(o model.Order) {
@@ -217,6 +304,10 @@ func (s *OrderService) ProcessDigiflazzWebhook(refID, status, sn, message string
 	order.Status = finalStatus
 	order.DigiflazzSN = sn
 	order.DigiflazzMessage = message
+
+	if finalStatus == model.StatusFailed {
+		s.refundIfAZcoin(order.ID, "Refund otomatis: top-up gagal")
+	}
 
 	if finalStatus == model.StatusSuccess && s.email != nil && order.CustomerEmail != "" {
 		go func(o model.Order) {
@@ -266,6 +357,7 @@ func (s *OrderService) CheckPendingOrderDigiflazzStatus(order *model.Order) (*mo
 		_ = s.store.UpdateOrderStatus(order.ID, model.StatusFailed)
 		order.Status = model.StatusFailed
 		order.DigiflazzMessage = dfResp.Data.Message
+		s.refundIfAZcoin(order.ID, "Refund otomatis: top-up gagal")
 	}
 
 	return order, nil
@@ -306,11 +398,21 @@ func (s *OrderService) RetryTopUp(orderID string) error {
 		return err
 	}
 
+	// An AZcoin order whose coins were already returned must not be re-sent (would give a free item).
+	if order.IsAZcoin() && s.store.HasAZcoinRefund(order.ID) {
+		return fmt.Errorf("AZcoin pesanan ini sudah dikembalikan ke saldo user, tidak bisa retry. Minta user order ulang")
+	}
+
 	return s.ExecuteTopUp(order)
 }
 
-func (s *OrderService) RefundOrder(orderID, adminNote string) error {
-	return s.store.UpdateOrderNote(orderID, adminNote, model.StatusRefund)
+// RefundOrder marks an order as refunded. For AZcoin orders the coins are credited back automatically.
+// Returns true when AZcoin was returned to the user's wallet.
+func (s *OrderService) RefundOrder(orderID, adminNote string) (bool, error) {
+	if err := s.store.UpdateOrderNote(orderID, adminNote, model.StatusRefund); err != nil {
+		return false, err
+	}
+	return s.store.RefundAZcoinOrder(orderID, "Refund oleh admin: "+adminNote)
 }
 
 func (s *OrderService) CheckExpiredOrders() (int64, error) {

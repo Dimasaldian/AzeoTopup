@@ -53,3 +53,17 @@ func GetAdminUser(r *http.Request) *model.AdminUser {
 	}
 	return nil
 }
+
+func RequireSuperAdmin(st *store.SQLiteStore) func(http.Handler) http.Handler {
+	requireAdmin := RequireAdmin(st)
+	return func(next http.Handler) http.Handler {
+		return requireAdmin(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			admin := GetAdminUser(r)
+			if admin == nil || admin.Role != "superadmin" {
+				http.Error(w, "Akses Ditolak: Fitur ini hanya dapat diakses oleh Superadmin.", http.StatusForbidden)
+				return
+			}
+			next.ServeHTTP(w, r)
+		}))
+	}
+}

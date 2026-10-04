@@ -73,6 +73,110 @@ document.addEventListener("DOMContentLoaded", function () {
     document.body.classList.add("has-mobile-bar");
   }
 
+  // Payment Method Selection Elements
+  const payCards = document.querySelectorAll(".payment-list-item");
+  const selectedPaymentMethodInput = document.getElementById("selected_payment_method");
+  const payQrisPrice = document.getElementById("pay_qris_price");
+  const payAzcoinPrice = document.getElementById("pay_azcoin_price");
+  const payEwalletPrice = document.getElementById("pay_ewallet_price");
+  const summaryPaymentMethod = document.getElementById("summary_payment_method");
+  const summaryAzcoinDiscountRow = document.getElementById("summary_azcoin_discount_row");
+  const summaryAzcoinDiscountVal = document.getElementById("summary_azcoin_discount_val");
+  const summaryBalanceWarning = document.getElementById("summary_balance_warning");
+  const isUserLoggedIn = document.getElementById("is_user_logged_in")?.value === "true";
+  const userAzcoinBalance = parseInt(document.getElementById("user_azcoin_balance")?.value || "0", 10);
+
+  let currentNormalPrice = 0;
+  let currentAzcoinPrice = 0;
+  let currentFormattedPrice = "Rp 0";
+  let currentFormattedAzcoin = "Rp 0";
+  let currentProductName = "";
+
+  function updateOrderTotals() {
+    const method = selectedPaymentMethodInput ? selectedPaymentMethodInput.value : "qris";
+
+    if (!selectedProductInput || !selectedProductInput.value) {
+      if (btnCheckout) btnCheckout.disabled = true;
+      if (btnMobileCheckout) btnMobileCheckout.disabled = true;
+      return;
+    }
+
+    if (method === "azcoin") {
+      const discountAmount = currentNormalPrice - currentAzcoinPrice;
+      if (summaryAzcoinDiscountRow) {
+        summaryAzcoinDiscountRow.style.display = discountAmount > 0 ? "flex" : "none";
+      }
+      if (summaryAzcoinDiscountVal) {
+        summaryAzcoinDiscountVal.textContent = "-Rp " + formatNumberJS(discountAmount);
+      }
+      if (summaryTotal) summaryTotal.textContent = currentFormattedAzcoin;
+      if (mobileSummaryTotal) mobileSummaryTotal.textContent = currentFormattedAzcoin;
+      if (summaryPaymentMethod) summaryPaymentMethod.textContent = "Saldo AZcoin";
+
+      // Check balance
+      if (!isUserLoggedIn) {
+        if (summaryBalanceWarning) {
+          summaryBalanceWarning.innerHTML = '⚡ Hemat belanja dengan masuk ke akun kamu. <a href="/login" style="text-decoration: underline; font-weight: 700;">Masuk Sekarang</a>';
+          summaryBalanceWarning.style.display = "block";
+        }
+        if (btnCheckout) {
+          btnCheckout.disabled = false;
+          btnCheckout.innerHTML = 'Masuk untuk Bayar via AZcoin &rarr;';
+        }
+        if (btnMobileCheckout) {
+          btnMobileCheckout.disabled = false;
+          btnMobileCheckout.innerHTML = '<span>Masuk Akun &rarr;</span>';
+        }
+      } else if (userAzcoinBalance < currentAzcoinPrice) {
+        if (summaryBalanceWarning) {
+          summaryBalanceWarning.innerHTML = 'Saldo AZcoin tidak cukup (' + formatNumberJS(userAzcoinBalance) + ' AZC). <a href="/account" style="text-decoration: underline; font-weight: 700;">Redeem Voucher</a>';
+          summaryBalanceWarning.style.display = "block";
+        }
+        if (btnCheckout) {
+          btnCheckout.disabled = true;
+          btnCheckout.innerHTML = 'Saldo AZcoin Tidak Cukup';
+        }
+        if (btnMobileCheckout) {
+          btnMobileCheckout.disabled = true;
+          btnMobileCheckout.innerHTML = '<span>Saldo Kurang</span>';
+        }
+      } else {
+        if (summaryBalanceWarning) summaryBalanceWarning.style.display = "none";
+        if (btnCheckout) {
+          btnCheckout.disabled = false;
+          btnCheckout.innerHTML = 'Bayar dengan Saldo AZcoin &rarr;';
+        }
+        if (btnMobileCheckout) {
+          btnMobileCheckout.disabled = false;
+          btnMobileCheckout.innerHTML = '<span>Bayar AZcoin &rarr;</span>';
+        }
+      }
+    } else {
+      // QRIS
+      if (summaryAzcoinDiscountRow) summaryAzcoinDiscountRow.style.display = "none";
+      if (summaryBalanceWarning) summaryBalanceWarning.style.display = "none";
+      if (summaryTotal) summaryTotal.textContent = currentFormattedPrice;
+      if (mobileSummaryTotal) mobileSummaryTotal.textContent = currentFormattedPrice;
+      const isEwallet = document.getElementById("pay_card_ewallet")?.classList.contains("selected");
+      if (summaryPaymentMethod) {
+        summaryPaymentMethod.textContent = isEwallet ? "E-Wallet (QRIS Instan)" : "QRIS Otomatis";
+      }
+      if (btnCheckout) {
+        btnCheckout.disabled = false;
+        btnCheckout.innerHTML = 'Lanjutkan Pembayaran &rarr;';
+      }
+      if (btnMobileCheckout) {
+        btnMobileCheckout.disabled = false;
+        btnMobileCheckout.innerHTML = '<span>Beli Sekarang &rarr;</span>';
+      }
+    }
+  }
+
+  function formatNumberJS(n) {
+    if (n < 0) n = -n;
+    return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  }
+
   // Handle Product Card Selection
   if (productCards.length > 0) {
     productCards.forEach((card) => {
@@ -86,8 +190,11 @@ document.addEventListener("DOMContentLoaded", function () {
           }
         });
 
-        const name = this.getAttribute("data-name");
-        const formattedPrice = this.getAttribute("data-formatted-price");
+        currentProductName = this.getAttribute("data-name") || "";
+        currentNormalPrice = parseInt(this.getAttribute("data-price") || "0", 10);
+        currentAzcoinPrice = parseInt(this.getAttribute("data-azcoin-price") || "0", 10) || currentNormalPrice;
+        currentFormattedPrice = this.getAttribute("data-formatted-price") || "Rp 0";
+        currentFormattedAzcoin = this.getAttribute("data-formatted-azcoin") || currentFormattedPrice;
 
         const isPromo = this.getAttribute("data-is-promo") === "true";
         const summaryPromoRow = document.getElementById("summary_promo_row");
@@ -97,16 +204,48 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (selectedProductInput) selectedProductInput.value = id;
 
+        // Update payment option preview prices
+        if (payQrisPrice) payQrisPrice.textContent = currentFormattedPrice;
+        if (payAzcoinPrice) payAzcoinPrice.textContent = currentFormattedAzcoin;
+        if (payEwalletPrice) payEwalletPrice.textContent = currentFormattedPrice;
+
         // Desktop Summary
-        if (summaryProduct) summaryProduct.textContent = name;
-        if (summaryPrice) summaryPrice.textContent = formattedPrice;
-        if (summaryTotal) summaryTotal.textContent = formattedPrice;
-        if (btnCheckout) btnCheckout.disabled = false;
+        if (summaryProduct) summaryProduct.textContent = currentProductName;
+        if (summaryPrice) summaryPrice.textContent = currentFormattedPrice;
 
         // Mobile Summary
-        if (mobileSummaryProduct) mobileSummaryProduct.textContent = name;
-        if (mobileSummaryTotal) mobileSummaryTotal.textContent = formattedPrice;
-        if (btnMobileCheckout) btnMobileCheckout.disabled = false;
+        if (mobileSummaryProduct) mobileSummaryProduct.textContent = currentProductName;
+
+        updateOrderTotals();
+      });
+    });
+  }
+
+  // Handle Payment Method Selection
+  if (payCards.length > 0) {
+    payCards.forEach((card) => {
+      card.addEventListener("click", function () {
+        const method = this.getAttribute("data-method");
+        if (selectedPaymentMethodInput) {
+          selectedPaymentMethodInput.value = (method === "ewallet" ? "qris" : method);
+        }
+
+        payCards.forEach((c) => {
+          if (c === this) {
+            c.classList.add("selected");
+          } else {
+            c.classList.remove("selected");
+          }
+        });
+
+        if (this.classList.contains("payment-list-item-accordion")) {
+          this.classList.toggle("open");
+        } else {
+          const acc = document.querySelector(".payment-list-item-accordion");
+          if (acc) acc.classList.remove("open");
+        }
+
+        updateOrderTotals();
       });
     });
   }
@@ -114,6 +253,12 @@ document.addEventListener("DOMContentLoaded", function () {
   // Mobile Checkout Button Click Event
   if (btnMobileCheckout && orderForm) {
     btnMobileCheckout.addEventListener("click", function () {
+      const method = selectedPaymentMethodInput ? selectedPaymentMethodInput.value : "qris";
+      if (method === "azcoin" && !isUserLoggedIn) {
+        window.location.href = "/login?redirect=" + encodeURIComponent(window.location.pathname);
+        return;
+      }
+
       const customerNo = document.getElementById("customer_no");
       if (!customerNo || !customerNo.value.trim()) {
         showError("Silakan masukkan Nomor ID Akun game Anda terlebih dahulu!");
@@ -181,6 +326,14 @@ document.addEventListener("DOMContentLoaded", function () {
     orderForm.addEventListener("submit", async function (e) {
       e.preventDefault();
 
+      const method = selectedPaymentMethodInput ? selectedPaymentMethodInput.value : "qris";
+
+      // If user chooses AZcoin but is not logged in, redirect to login page
+      if (method === "azcoin" && !isUserLoggedIn) {
+        window.location.href = "/login?redirect=" + encodeURIComponent(window.location.pathname);
+        return;
+      }
+
       const gameCode = document.getElementById("game_code").value;
       const customerNo = document.getElementById("customer_no").value.trim();
       const customerNo2Elem = document.getElementById("customer_no2");
@@ -225,8 +378,8 @@ document.addEventListener("DOMContentLoaded", function () {
         if (btnCheckout) {
           btnCheckout.disabled = loading;
           btnCheckout.innerHTML = loading
-            ? '<span class="spinner"></span> Membuat Pesanan...'
-            : "Lanjutkan Pembayaran &rarr;";
+            ? '<span class="spinner"></span> Memproses...'
+            : (method === "azcoin" ? "Bayar dengan Saldo AZcoin &rarr;" : "Lanjutkan Pembayaran &rarr;");
         }
         if (btnMobileCheckout) {
           btnMobileCheckout.disabled = loading;
@@ -250,6 +403,7 @@ document.addEventListener("DOMContentLoaded", function () {
             customer_no2: customerNo2,
             customer_email: customerEmail,
             product_id: productId,
+            payment_method: method,
           }),
         });
 
@@ -411,6 +565,120 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       });
     }
+  }
+
+  // --- Auto Check Game Username / Nickname (100% Automatic) ---
+  const customerNoInput = document.getElementById("customer_no");
+  const customerNo2Input = document.getElementById("customer_no2");
+  const gameCodeInput = document.getElementById("game_code_hidden");
+  const usernameStatusBox = document.getElementById("username_check_status");
+  const verifiedUsernameInput = document.getElementById("verified_username");
+  const summaryUsernameRow = document.getElementById("summary_username_row");
+  const summaryUsernameVal = document.getElementById("summary_username_val");
+
+  let checkUsernameTimeout = null;
+
+  function doCheckUsername(immediate = false) {
+    if (!customerNoInput || !gameCodeInput || !usernameStatusBox) return;
+
+    let userId = customerNoInput.value.trim();
+    let zoneId = customerNo2Input ? customerNo2Input.value.trim() : "";
+
+    // Auto-detect if user pasted "UserID(ZoneID)" or "UserID (ZoneID)" into User ID
+    if (customerNo2Input && (!zoneId || zoneId.length === 0)) {
+      const match = userId.match(/^(\d+)\s*[\(\[](\d+)[\)\]]$/);
+      if (match) {
+        userId = match[1];
+        zoneId = match[2];
+        customerNoInput.value = userId;
+        customerNo2Input.value = zoneId;
+      }
+    }
+
+    // Determine required length based on presence of Zone ID
+    const minUserLen = customerNo2Input ? 4 : 5;
+    if (userId.length < minUserLen) {
+      usernameStatusBox.style.display = "none";
+      if (summaryUsernameRow) summaryUsernameRow.style.display = "none";
+      if (verifiedUsernameInput) verifiedUsernameInput.value = "";
+      return;
+    }
+
+    // If game has Zone ID (e.g. Mobile Legends), wait until zoneId has at least 3 digits
+    if (customerNo2Input && zoneId.length < 3) {
+      usernameStatusBox.style.display = "none";
+      if (summaryUsernameRow) summaryUsernameRow.style.display = "none";
+      if (verifiedUsernameInput) verifiedUsernameInput.value = "";
+      return;
+    }
+
+    usernameStatusBox.style.display = "flex";
+    usernameStatusBox.style.background = "#EFF6FF";
+    usernameStatusBox.style.color = "#1D4ED8";
+    usernameStatusBox.style.border = "1px solid #BFDBFE";
+    usernameStatusBox.innerHTML = '<span style="display: inline-flex; align-items: center; gap: 8px;">⏳ Memeriksa akun game...</span>';
+
+    const executeFetch = () => {
+      const gameCode = gameCodeInput.value.trim();
+      let queryUrl = `/api/check-username?game=${encodeURIComponent(gameCode)}&user_id=${encodeURIComponent(userId)}`;
+      if (zoneId) {
+        queryUrl += `&zone_id=${encodeURIComponent(zoneId)}`;
+      }
+
+      fetch(queryUrl)
+        .then((res) => res.json())
+        .then((res) => {
+          if (res.success && res.data && res.data.username) {
+            const username = res.data.username;
+            usernameStatusBox.style.display = "flex";
+            usernameStatusBox.style.background = "#F0FDF4";
+            usernameStatusBox.style.color = "#15803D";
+            usernameStatusBox.style.border = "1px solid #BBF7D0";
+            usernameStatusBox.innerHTML = `<span>✅ Akun Ditemukan: <strong>${escapeHTML(username)}</strong></span>`;
+
+            if (verifiedUsernameInput) verifiedUsernameInput.value = username;
+            if (summaryUsernameRow) summaryUsernameRow.style.display = "flex";
+            if (summaryUsernameVal) summaryUsernameVal.textContent = username;
+          } else {
+            usernameStatusBox.style.display = "flex";
+            usernameStatusBox.style.background = "#FEF2F2";
+            usernameStatusBox.style.color = "#B91C1C";
+            usernameStatusBox.style.border = "1px solid #FECACA";
+            usernameStatusBox.innerHTML = `<span>❌ ${escapeHTML(res.message || "User ID / Zone ID tidak ditemukan")}</span>`;
+
+            if (verifiedUsernameInput) verifiedUsernameInput.value = "";
+            if (summaryUsernameRow) summaryUsernameRow.style.display = "none";
+          }
+        })
+        .catch((err) => {
+          usernameStatusBox.style.display = "none";
+        });
+    };
+
+    clearTimeout(checkUsernameTimeout);
+    if (immediate) {
+      executeFetch();
+    } else {
+      checkUsernameTimeout = setTimeout(executeFetch, 400);
+    }
+  }
+
+  function escapeHTML(str) {
+    if (!str) return "";
+    return str.replace(/[&<>'"]/g, 
+      tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+    );
+  }
+
+  if (customerNoInput) {
+    customerNoInput.addEventListener("input", () => doCheckUsername(false));
+    customerNoInput.addEventListener("change", () => doCheckUsername(true));
+    customerNoInput.addEventListener("blur", () => doCheckUsername(true));
+  }
+  if (customerNo2Input) {
+    customerNo2Input.addEventListener("input", () => doCheckUsername(false));
+    customerNo2Input.addEventListener("change", () => doCheckUsername(true));
+    customerNo2Input.addEventListener("blur", () => doCheckUsername(true));
   }
 
   function getBadgeClass(status) {

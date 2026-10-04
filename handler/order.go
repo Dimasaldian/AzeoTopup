@@ -4,19 +4,23 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"topupku/middleware"
+	"topupku/model"
 	"topupku/service"
 	"topupku/store"
 )
 
 type OrderHandler struct {
-	store  *store.SQLiteStore
-	orders *service.OrderService
+	store    *store.SQLiteStore
+	orders   *service.OrderService
+	apigames *service.ApiGamesClient
 }
 
-func NewOrderHandler(st *store.SQLiteStore, os *service.OrderService) *OrderHandler {
+func NewOrderHandler(st *store.SQLiteStore, os *service.OrderService, ag *service.ApiGamesClient) *OrderHandler {
 	return &OrderHandler{
-		store:  st,
-		orders: os,
+		store:    st,
+		orders:   os,
+		apigames: ag,
 	}
 }
 
@@ -26,6 +30,7 @@ type CreateOrderRequest struct {
 	CustomerNo2   string `json:"customer_no2"`
 	CustomerEmail string `json:"customer_email"`
 	ProductID     int64  `json:"product_id"`
+	PaymentMethod string `json:"payment_method"` // "qris" or "azcoin"
 }
 
 type JSONResponse struct {
@@ -44,22 +49,40 @@ func (h *OrderHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	order, err := h.orders.CreateOrder(req.GameCode, req.CustomerNo, req.CustomerNo2, req.CustomerEmail, req.ProductID)
+	user := middleware.GetUser(r)
+
+	// If guest didn't select, default to QRIS
+	if req.PaymentMethod == "" {
+		req.PaymentMethod = model.PaymentMethodQRIS
+	}
+
+	// Auto-fill email if user is logged in and email is empty
+	if req.CustomerEmail == "" && user != nil {
+		req.CustomerEmail = user.Email
+	}
+
+	order, err := h.orders.CreateOrderFor(req.GameCode, req.CustomerNo, req.CustomerNo2, req.CustomerEmail, req.ProductID, user, req.PaymentMethod)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		_ = json.NewEncoder(w).Encode(JSONResponse{Success: false, Message: err.Error()})
 		return
 	}
 
+	respData := map[string]interface{}{
+		"order_id":       order.ID,
+		"redirect_url":   "/order/" + order.ID,
+		"price":          order.Price,
+		"payment_method": order.PaymentMethod,
+		"status":         order.Status,
+	}
+	if order.PaymentMethod == model.PaymentMethodQRIS {
+		respData["qr_url"] = order.PaymentQRURL
+		respData["checkout_url"] = order.PaymentCheckoutURL
+	}
+
 	_ = json.NewEncoder(w).Encode(JSONResponse{
 		Success: true,
-		Data: map[string]interface{}{
-			"order_id":     order.ID,
-			"redirect_url": "/order/" + order.ID,
-			"qr_url":       order.PaymentQRURL,
-			"checkout_url": order.PaymentCheckoutURL,
-			"price":        order.Price,
-		},
+		Data:    respData,
 	})
 }
 
@@ -114,3 +137,39 @@ func (h *OrderHandler) SimulatePayment(w http.ResponseWriter, r *http.Request) {
 		Message: "Simulasi pembayaran berhasil! Top-up sedang diproses.",
 	})
 }
+
+func (h *OrderHandler) CheckUsername(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	game := r.URL.Query().Get("game")
+	userID := r.URL.Query().Get("user_id")
+	zoneID := r.URL.Query().Get("zone_id")
+
+	if game == "" || userID == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(JSONResponse{
+			Success: false,
+			Message: "Parameter game dan user_id wajib diisi",
+		})
+		return
+	}
+
+	result, err := h.apigames.CheckUsername(game, userID, zoneID)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(JSONResponse{
+			Success: false,
+			Message: err.Error(),
+		})
+		return
+	}
+
+	_ = json.NewEncoder(w).Encode(JSONResponse{
+		Success: result.Success,
+		Message: result.Message,
+		Data: map[string]interface{}{
+			"username": result.Username,
+		},
+	})
+}
+

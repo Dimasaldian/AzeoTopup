@@ -6,11 +6,26 @@
       <span class="brand-text">Azeotopup</span>
     </a>
     <nav class="nav-links">
-      <a href="/" class="nav-link active">Beranda</a>
-      <button type="button" class="nav-btn-track" onclick="trackOrderPrompt()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-        <span>Lacak Pesanan</span>
-      </button>
+      <a href="/" class="nav-link">Beranda</a>
+      <a href="/bantuan" class="nav-link">Bantuan & CS</a>
+      {{if .User}}
+      <a href="/account" class="nav-azcoin-badge" title="Klik untuk lihat saldo & riwayat">
+        <span class="azcoin-icon">🪙</span>
+        <span class="azcoin-amount">{{formatNumber .User.Balance}}</span>
+        <span class="azcoin-unit">AZC</span>
+      </a>
+      <div class="user-menu-dropdown">
+        <a href="/account" class="nav-user-btn">
+          <span class="nav-user-avatar">{{.User.Initial}}</span>
+          <span class="nav-user-name">{{.User.Name}}</span>
+        </a>
+      </div>
+      {{else}}
+      <a href="/login" class="nav-btn-login">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        <span>Masuk / Daftar</span>
+      </a>
+      {{end}}
     </nav>
   </div>
 </header>

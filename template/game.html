@@ -8,6 +8,10 @@
   <form id="order_form">
     <input type="hidden" id="game_code" value="{{.Game.Code}}">
     <input type="hidden" id="selected_product_id" value="">
+    <input type="hidden" id="selected_payment_method" value="qris">
+    <input type="hidden" id="is_user_logged_in" value="{{if .User}}true{{else}}false{{end}}">
+    <input type="hidden" id="user_azcoin_balance" value="{{if .User}}{{.User.Balance}}{{else}}0{{end}}">
+    <input type="hidden" id="azcoin_discount_percent" value="{{.DiscountPercent}}">
 
     <div class="topup-layout">
       <!-- Main Content (Steps) -->
@@ -39,11 +43,16 @@
 
             {{if .Game.ID2Label}}
             <div class="form-group">
-              <label class="form-label" for="customer_no2">{{.Game.ID2Label}}</label>
+              <label class="form-label" for="customer_no2">{{.Game.ID2Label}} *</label>
               <input type="text" id="customer_no2" class="form-control" placeholder="{{.Game.ID2Placeholder}}">
               <span class="form-help">Masukkan Zone atau Server ID Anda</span>
             </div>
             {{end}}
+          </div>
+
+          <input type="hidden" id="game_code_hidden" value="{{.Game.Code}}">
+          <input type="hidden" id="verified_username" value="">
+          <div id="username_check_status" style="display: none; margin-top: 14px; padding: 12px 16px; border-radius: 10px; font-size: 0.9rem; font-weight: 600; align-items: center; gap: 10px; transition: all 0.2s ease;">
           </div>
         </div>
 
@@ -55,7 +64,7 @@
           </div>
 
           {{if .PromoProducts}}
-          <!-- Flash Sale Container (Top Priority & Rame) -->
+          <!-- Flash Sale Container -->
           <div class="flash-sale-container">
             <div class="flash-sale-top-bar">
               <div class="flash-title-area">
@@ -69,11 +78,14 @@
 
             <div class="flash-sale-cards">
               {{range .PromoProducts}}
+              {{$azPrice := azcoinPrice .EffectivePrice .CostPrice $.DiscountPercent}}
               <div class="product-card flash-deal-card" 
                    data-id="{{.ID}}" 
                    data-name="{{.EffectiveName}}" 
                    data-price="{{.EffectivePrice}}" 
+                   data-azcoin-price="{{$azPrice}}"
                    data-formatted-price="{{formatRupiah .EffectivePrice}}"
+                   data-formatted-azcoin="{{formatRupiah $azPrice}}"
                    data-is-promo="true"
                    data-original-price="{{formatRupiah .OriginalPrice}}">
                 
@@ -90,7 +102,6 @@
                   </div>
                 </div>
 
-                <!-- Progress Bar: makin berkurang stok, garis makin penuh (Shopee style) -->
                 <div class="flash-progress-section">
                   <div class="flash-progress-track">
                     <div class="flash-progress-bar" style="width: {{percentSold .PromoRemaining .PromoQuota}}%;"></div>
@@ -138,11 +149,14 @@
             </div>
             <div class="product-grid">
               {{range index $.GroupedProducts $groupName}}
+              {{$azPrice := azcoinPrice .EffectivePrice .CostPrice $.DiscountPercent}}
               <div class="product-card {{if eq $groupName "Membership & Pass"}}product-card-pass{{end}} {{if .HasActivePromo}}product-card-promo{{end}}" 
                    data-id="{{.ID}}" 
                    data-name="{{.EffectiveName}}" 
                    data-price="{{.EffectivePrice}}" 
+                   data-azcoin-price="{{$azPrice}}"
                    data-formatted-price="{{formatRupiah .EffectivePrice}}"
+                   data-formatted-azcoin="{{formatRupiah $azPrice}}"
                    data-is-promo="{{if .HasActivePromo}}true{{else}}false{{end}}"
                    data-original-price="{{formatRupiah .OriginalPrice}}">
                 
@@ -188,24 +202,144 @@
           {{end}}
         </div>
 
-        <!-- Step 3: Email Bukti Pembelian -->
-        <div class="section-box">
+        <!-- Step 3: Choose Payment Method -->
+        <div class="section-box" id="section-payment">
           <div class="section-header">
             <span class="step-num">3</span>
+            <h2 class="section-title">Pilih Metode Pembayaran</h2>
+          </div>
+
+          <style>
+            .payment-method-list { display: flex; flex-direction: column; gap: 14px; width: 100%; }
+            .payment-list-item { position: relative; display: flex; flex-direction: column; background: #FFFFFF; border: 1.5px solid #E2E8F0; border-radius: 12px; padding: 16px 20px; cursor: pointer; transition: all 0.2s ease; overflow: hidden; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03); user-select: none; }
+            .payment-list-item:hover { background: #F8FAFC; border-color: #CBD5E1; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05); }
+            .payment-list-item.selected { border-color: #4F46E5; background: #F8FAFF; box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2), 0 4px 14px rgba(79, 70, 229, 0.06); }
+            .payment-ribbon { position: absolute; top: 13px; right: -32px; background: linear-gradient(135deg, #F97316 0%, #EA580C 100%); color: #FFFFFF; font-size: 0.62rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 34px; transform: rotate(45deg); box-shadow: 0 2px 4px rgba(0,0,0,0.15); pointer-events: none; z-index: 5; }
+            .payment-item-main { display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 14px; }
+            .payment-item-left { display: flex; align-items: center; gap: 14px; flex: 1; min-width: 0; }
+            .payment-coin-icon { font-size: 1.8rem; line-height: 1; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+            .payment-item-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+            .payment-item-title { font-size: 1.05rem; font-weight: 700; color: #0F172A; line-height: 1.25; }
+            .payment-item-sub { font-size: 0.8rem; font-weight: 600; color: #DC2626; line-height: 1.2; }
+            .payment-item-right { display: flex; align-items: center; justify-content: flex-end; text-align: right; flex-shrink: 0; padding-right: 22px; z-index: 2; }
+            .payment-item-price { font-size: 1.05rem; font-weight: 800; color: #DC2626; letter-spacing: -0.01em; white-space: nowrap; }
+            .qris-brand-strip { display: flex; align-items: center; gap: 8px; margin-top: 3px; flex-wrap: wrap; }
+            .qris-logo-tag { background: #0F172A; color: #FFFFFF; font-size: 0.68rem; font-weight: 900; padding: 2px 7px; border-radius: 4px; letter-spacing: 0.04em; display: inline-block; }
+            .qris-sub-tag { font-size: 0.75rem; color: #64748B; font-weight: 500; }
+            .payment-ewallet-logos { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+            .ewallet-badge { font-size: 0.68rem; font-weight: 800; padding: 2px 7px; border-radius: 4px; color: #FFFFFF; letter-spacing: 0.02em; display: inline-flex; align-items: center; line-height: 1.3; }
+            .ewallet-badge.ovo { background: #4C2A86; }
+            .ewallet-badge.gopay { background: #00AED6; }
+            .ewallet-badge.dana { background: #118EEA; }
+            .ewallet-badge.shopeepay { background: #EE4D2D; }
+            .ewallet-badge.linkaja { background: #DF192A; }
+            .payment-accordion-arrow { color: #64748B; display: flex; align-items: center; justify-content: center; transition: transform 0.25s ease; }
+            .payment-list-item-accordion.open .payment-accordion-arrow { transform: rotate(180deg); }
+            .payment-accordion-body { display: none; margin-top: 12px; padding-top: 12px; border-top: 1px dashed #E2E8F0; }
+            .payment-list-item-accordion.open .payment-accordion-body { display: block; }
+            .ewallet-hint-text { margin: 0; font-size: 0.8rem; color: #64748B; line-height: 1.5; }
+            .payment-login-banner { margin-top: 12px; padding: 9px 12px; background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 8px; font-size: 0.78rem; color: #92400E; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+            .payment-login-banner .btn-login-inline { font-weight: 700; color: #B45309; text-decoration: underline; flex-shrink: 0; }
+          </style>
+
+          <div class="payment-method-list">
+            <!-- Option 1: AZcoin -->
+            <div class="payment-list-item" data-method="azcoin" id="pay_card_azcoin">
+              <div class="payment-ribbon">BEST PRICE</div>
+              <div class="payment-item-main">
+                <div class="payment-item-left">
+                  <div class="payment-coin-icon">🪙</div>
+                  <div class="payment-item-text">
+                    <div class="payment-item-title">AZcoin</div>
+                    <div class="payment-item-sub">
+                      {{if .User}}
+                        <span>Max. {{formatNumber .User.Balance}} AZC</span>
+                      {{else}}
+                        <span>Diskon Spesial Member</span>
+                      {{end}}
+                    </div>
+                  </div>
+                </div>
+                <div class="payment-item-right">
+                  <div class="payment-item-price" id="pay_azcoin_price">Rp 0</div>
+                </div>
+              </div>
+              {{if not .User}}
+              <div class="payment-login-banner">
+                <span>⚡ Login akun untuk bayar pakai saldo AZcoin</span>
+                <a href="/login?redirect=/game/{{.Game.Code}}" class="btn-login-inline">Masuk Akun &rarr;</a>
+              </div>
+              {{end}}
+            </div>
+
+            <!-- Option 2: QRIS -->
+            <div class="payment-list-item selected" data-method="qris" id="pay_card_qris">
+              <div class="payment-ribbon">BEST PRICE</div>
+              <div class="payment-item-main">
+                <div class="payment-item-left">
+                  <div class="payment-item-text">
+                    <div class="payment-item-title">QRIS (All Payment)</div>
+                    <div class="qris-brand-strip">
+                      <span class="qris-logo-tag">QRIS</span>
+                      <span class="qris-sub-tag">Scan via Semua Bank & E-Wallet</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="payment-item-right">
+                  <div class="payment-item-price" id="pay_qris_price">Rp 0</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Option 3: E-Wallet Accordion -->
+            <div class="payment-list-item payment-list-item-accordion" data-method="ewallet" id="pay_card_ewallet">
+              <div class="payment-item-main">
+                <div class="payment-item-left">
+                  <div class="payment-item-text">
+                    <div class="payment-item-title">E-Wallet</div>
+                    <div class="payment-ewallet-logos">
+                      <span class="ewallet-badge ovo">OVO</span>
+                      <span class="ewallet-badge gopay">GoPay</span>
+                      <span class="ewallet-badge dana">DANA</span>
+                      <span class="ewallet-badge shopeepay">ShopeePay</span>
+                      <span class="ewallet-badge linkaja">LinkAja</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="payment-item-right" style="display: flex; align-items: center; gap: 12px;">
+                  <div class="payment-item-price" id="pay_ewallet_price">Rp 0</div>
+                  <div class="payment-accordion-arrow">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                  </div>
+                </div>
+              </div>
+              <div class="payment-accordion-body">
+                <p class="ewallet-hint-text">
+                  Pembayaran E-Wallet otomatis didukung via QRIS instan. Setelah checkout, scan kode QR dengan aplikasi OVO, GoPay, DANA, ShopeePay, atau LinkAja Anda. Saldo terpotong langsung dan pesanan langsung diproses otomatis.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 4: Email Bukti Pembelian -->
+        <div class="section-box">
+          <div class="section-header">
+            <span class="step-num">4</span>
             <h2 class="section-title">Email Penerima Invoice</h2>
           </div>
           <div class="form-group">
             <label class="form-label" for="customer_email">Alamat Email Pembeli *</label>
-            <input type="email" id="customer_email" class="form-control" placeholder="nama@email.com" required autocomplete="email">
-            <span class="form-help">Wajib diisi. Invoice resmi, rincian pembayaran QRIS, dan Serial Number (SN) item game akan otomatis dikirim ke email ini setelah pembayaran berhasil.</span>
+            <input type="email" id="customer_email" class="form-control" placeholder="nama@email.com" value="{{if .User}}{{.User.Email}}{{end}}" required autocomplete="email">
+            <span class="form-help">Wajib diisi. Invoice resmi dan Serial Number (SN) item game akan otomatis dikirimkan ke email ini.</span>
           </div>
         </div>
 
-        <!-- Step 4: Instructions -->
+        <!-- Step 5: Instructions -->
         {{if .Game.InstructionText}}
         <div class="section-box">
           <div class="section-header">
-            <span class="step-num">4</span>
+            <span class="step-num">5</span>
             <h2 class="section-title">Petunjuk Pengisian</h2>
           </div>
           <div style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.7;">
@@ -228,17 +362,25 @@
             <span>Item</span>
             <strong id="summary_product_name" style="color: var(--text-main);">- Belum dipilih -</strong>
           </div>
+          <div class="summary-row" id="summary_username_row" style="display: none;">
+            <span>Nama Akun</span>
+            <strong id="summary_username_val" style="color: #10B981; font-weight: 800;">-</strong>
+          </div>
           <div class="summary-row">
-            <span>Harga</span>
+            <span>Harga Normal</span>
             <span id="summary_price">Rp 0</span>
           </div>
           <div id="summary_promo_row" class="summary-row" style="display: none; background: #FEF2F2; padding: 6px 10px; border-radius: 6px; margin: 6px 0; border: 1px dashed #FCA5A5;">
             <span style="color: #DC2626; font-weight: 700; font-size: 0.78rem;">🔥 Flash Sale</span>
-            <strong style="color: #DC2626; font-size: 0.78rem;">Harga Diskon Spesial</strong>
+            <strong style="color: #DC2626; font-size: 0.78rem;">Harga Promo</strong>
+          </div>
+          <div id="summary_azcoin_discount_row" class="summary-row" style="display: none; background: #EEF2FF; padding: 6px 10px; border-radius: 6px; margin: 6px 0; border: 1px dashed #A5B4FC;">
+            <span style="color: #4338CA; font-weight: 700; font-size: 0.78rem;">🪙 Diskon AZcoin</span>
+            <strong style="color: #4338CA; font-size: 0.78rem;" id="summary_azcoin_discount_val">-Rp 0</strong>
           </div>
           <div class="summary-row">
             <span>Metode Bayar</span>
-            <strong style="color: var(--text-main);">QRIS Otomatis</strong>
+            <strong style="color: var(--text-main);" id="summary_payment_method">QRIS Otomatis</strong>
           </div>
 
           <div class="summary-row total">
@@ -246,18 +388,22 @@
             <span id="summary_total">Rp 0</span>
           </div>
 
+          <div id="summary_balance_warning" class="alert alert-error" style="display: none; font-size: 0.78rem; padding: 8px 10px; margin-top: 10px;">
+            Saldo AZcoin kamu tidak cukup. <a href="/account" style="text-decoration: underline; font-weight: 700;">Redeem voucher</a>
+          </div>
+
           <button type="submit" id="btn_checkout" class="btn-checkout" disabled>
             Lanjutkan Pembayaran &rarr;
           </button>
 
-          <p style="font-size: 0.75rem; color: var(--text-muted); text-align: center; margin-top: 14px;">
+          <p style="font-size: 0.75rem; color: var(--text-muted); text-align: center; margin-top: 14px;" id="summary_footer_note">
             Terverifikasi resmi via QRIS Bank Indonesia
           </p>
         </div>
       </aside>
     </div>
 
-    <!-- Floating Mobile Bottom Checkout Bar (UniPin / Codashop Style) -->
+    <!-- Floating Mobile Bottom Checkout Bar -->
     <div class="mobile-checkout-bar" id="mobile_checkout_bar">
       <div class="mobile-checkout-info">
         <span class="mobile-checkout-label">Total Pembayaran</span>

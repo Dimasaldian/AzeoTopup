@@ -175,10 +175,17 @@ func (s *SQLiteStore) migrate() error {
 	_, _ = s.db.Exec("ALTER TABLE products ADD COLUMN promo_price INTEGER DEFAULT 0")
 	_, _ = s.db.Exec("ALTER TABLE products ADD COLUMN promo_quota INTEGER DEFAULT 0")
 	_, _ = s.db.Exec("ALTER TABLE products ADD COLUMN promo_remaining INTEGER DEFAULT 0")
+	_, _ = s.db.Exec("ALTER TABLE orders ADD COLUMN user_id INTEGER DEFAULT 0")
+	_, _ = s.db.Exec("ALTER TABLE orders ADD COLUMN payment_method TEXT DEFAULT 'qris'")
+	_, _ = s.db.Exec("CREATE INDEX IF NOT EXISTS idx_orders_user ON orders(user_id)")
 	_, _ = s.db.Exec("PRAGMA foreign_keys = OFF")
 	_, _ = s.db.Exec("DELETE FROM products WHERE id = 1 AND is_active = 0")
 	_, _ = s.db.Exec("PRAGMA foreign_keys = ON")
-	return nil
+
+	if err := s.migrateUsers(); err != nil {
+		return err
+	}
+	return s.migrateTickets()
 }
 
 func (s *SQLiteStore) SeedInitialData(adminUsername, adminPassword string) error {
@@ -883,18 +890,29 @@ func (s *SQLiteStore) UpsertDigiflazzPriceSync(sku string, costPrice int, stockS
 func (s *SQLiteStore) CreateOrder(o *model.Order) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	return insertOrder(s.db, o)
+}
 
-	_, err := s.db.Exec(`
+// sqlExecer is satisfied by both *sql.DB and *sql.Tx.
+type sqlExecer interface {
+	Exec(query string, args ...interface{}) (sql.Result, error)
+}
+
+func insertOrder(db sqlExecer, o *model.Order) error {
+	if o.PaymentMethod == "" {
+		o.PaymentMethod = model.PaymentMethodQRIS
+	}
+	_, err := db.Exec(`
 		INSERT INTO orders (
 			id, game_id, customer_no, customer_no2, customer_email, product_id, product_name,
 			price, cost, status, payment_trx_id, payment_checkout_url, payment_qr_url,
 			payment_qr_string, payment_expiry, digiflazz_ref_id, digiflazz_sn,
-			digiflazz_status, digiflazz_message, admin_note, created_at, updated_at
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+			digiflazz_status, digiflazz_message, admin_note, user_id, payment_method, created_at, updated_at
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 	`, o.ID, o.GameID, o.CustomerNo, o.CustomerNo2, o.CustomerEmail, o.ProductID, o.ProductName,
 		o.Price, o.Cost, o.Status, o.PaymentTrxID, o.PaymentCheckoutURL, o.PaymentQRURL,
 		o.PaymentQRString, o.PaymentExpiry, o.DigiflazzRefID, o.DigiflazzSN,
-		o.DigiflazzStatus, o.DigiflazzMessage, o.AdminNote)
+		o.DigiflazzStatus, o.DigiflazzMessage, o.AdminNote, o.UserID, o.PaymentMethod)
 	return err
 }
 
@@ -907,7 +925,8 @@ func (s *SQLiteStore) GetOrderByID(id string) (*model.Order, error) {
 		       o.price, o.cost, o.status, o.payment_trx_id, o.payment_checkout_url, o.payment_qr_url,
 		       o.payment_qr_string, o.payment_expiry, o.digiflazz_ref_id, o.digiflazz_sn,
 		       o.digiflazz_status, o.digiflazz_message, o.admin_note, o.created_at, o.updated_at,
-		       g.name as game_name, g.code as game_code
+		       g.name as game_name, g.code as game_code,
+		       COALESCE(o.user_id, 0), COALESCE(o.payment_method, 'qris')
 		FROM orders o
 		JOIN games g ON o.game_id = g.id
 		WHERE o.id = ?
@@ -918,7 +937,7 @@ func (s *SQLiteStore) GetOrderByID(id string) (*model.Order, error) {
 		&o.Price, &o.Cost, &o.Status, &o.PaymentTrxID, &o.PaymentCheckoutURL, &o.PaymentQRURL,
 		&o.PaymentQRString, &o.PaymentExpiry, &o.DigiflazzRefID, &o.DigiflazzSN,
 		&o.DigiflazzStatus, &o.DigiflazzMessage, &o.AdminNote, &o.CreatedAt, &o.UpdatedAt,
-		&o.GameName, &o.GameCode,
+		&o.GameName, &o.GameCode, &o.UserID, &o.PaymentMethod,
 	)
 	if err != nil {
 		return nil, err
@@ -1118,7 +1137,8 @@ func (s *SQLiteStore) GetAllOrders(statusFilter, gameFilter, search string, limi
 		       o.price, o.cost, o.status, o.payment_trx_id, o.payment_checkout_url, o.payment_qr_url,
 		       o.payment_qr_string, o.payment_expiry, o.digiflazz_ref_id, o.digiflazz_sn,
 		       o.digiflazz_status, o.digiflazz_message, o.admin_note, o.created_at, o.updated_at,
-		       g.name as game_name, g.code as game_code
+		       g.name as game_name, g.code as game_code,
+		       COALESCE(o.user_id, 0), COALESCE(o.payment_method, 'qris')
 		FROM orders o
 		JOIN games g ON o.game_id = g.id
 		WHERE %s
@@ -1141,7 +1161,7 @@ func (s *SQLiteStore) GetAllOrders(statusFilter, gameFilter, search string, limi
 			&o.Price, &o.Cost, &o.Status, &o.PaymentTrxID, &o.PaymentCheckoutURL, &o.PaymentQRURL,
 			&o.PaymentQRString, &o.PaymentExpiry, &o.DigiflazzRefID, &o.DigiflazzSN,
 			&o.DigiflazzStatus, &o.DigiflazzMessage, &o.AdminNote, &o.CreatedAt, &o.UpdatedAt,
-			&o.GameName, &o.GameCode,
+			&o.GameName, &o.GameCode, &o.UserID, &o.PaymentMethod,
 		)
 		if err != nil {
 			return nil, 0, err
@@ -1353,6 +1373,118 @@ func (s *SQLiteStore) GetDashboardStats() (*model.DashboardStats, error) {
 	_ = s.db.QueryRow("SELECT COUNT(*) FROM orders WHERE status = 'pending_payment'").Scan(&stats.PendingOrderCount)
 
 	return stats, nil
+}
+
+func (s *SQLiteStore) GetAllAdmins() ([]*model.AdminUser, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	rows, err := s.db.Query(`
+		SELECT id, username, display_name, role, is_active, last_login_at, created_at
+		FROM admin_users ORDER BY id ASC
+	`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var admins []*model.AdminUser
+	for rows.Next() {
+		var a model.AdminUser
+		var isActiveInt int
+		if err := rows.Scan(&a.ID, &a.Username, &a.DisplayName, &a.Role, &isActiveInt, &a.LastLoginAt, &a.CreatedAt); err != nil {
+			return nil, err
+		}
+		a.IsActive = isActiveInt == 1
+		admins = append(admins, &a)
+	}
+	return admins, nil
+}
+
+func (s *SQLiteStore) CreateAdmin(username, password, displayName, role string) (*model.AdminUser, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, err
+	}
+
+	if role != "superadmin" {
+		role = "admin"
+	}
+
+	res, err := s.db.Exec(`
+		INSERT INTO admin_users (username, password_hash, display_name, role, is_active, created_at)
+		VALUES (?, ?, ?, ?, 1, CURRENT_TIMESTAMP)
+	`, username, string(hash), displayName, role)
+	if err != nil {
+		return nil, err
+	}
+
+	id, err := res.LastInsertId()
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.AdminUser{
+		ID:          id,
+		Username:    username,
+		DisplayName: displayName,
+		Role:        role,
+		IsActive:    true,
+		CreatedAt:   time.Now(),
+	}, nil
+}
+
+func (s *SQLiteStore) UpdateAdmin(id int64, displayName, role string, isActive bool, newPassword string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	isActiveInt := 0
+	if isActive {
+		isActiveInt = 1
+	}
+
+	if role != "superadmin" {
+		role = "admin"
+	}
+
+	if newPassword != "" {
+		hash, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+		if err != nil {
+			return err
+		}
+		_, err = s.db.Exec(`
+			UPDATE admin_users
+			SET display_name = ?, role = ?, is_active = ?, password_hash = ?
+			WHERE id = ?
+		`, displayName, role, isActiveInt, string(hash), id)
+		return err
+	}
+
+	_, err := s.db.Exec(`
+		UPDATE admin_users
+		SET display_name = ?, role = ?, is_active = ?
+		WHERE id = ?
+	`, displayName, role, isActiveInt, id)
+	return err
+}
+
+func (s *SQLiteStore) ToggleAdminActive(id int64) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	_, err := s.db.Exec("UPDATE admin_users SET is_active = CASE WHEN is_active = 1 THEN 0 ELSE 1 END WHERE id = ?", id)
+	return err
+}
+
+func (s *SQLiteStore) DeleteAdmin(id int64) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	_, err := s.db.Exec("DELETE FROM admin_users WHERE id = ?", id)
+	return err
 }
 
 func boolToInt(b bool) int {

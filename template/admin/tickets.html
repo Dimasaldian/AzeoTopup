@@ -1,0 +1,112 @@
+{{define "content"}}
+<div>
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 22px; flex-wrap: wrap; gap: 12px;">
+    <div>
+      <h1 style="font-size: 1.35rem; font-weight: 800;">Pusat Aduan & Layanan CS Pelanggan</h1>
+      <p style="font-size: 0.82rem; color: var(--admin-muted); margin-top: 2px;">
+        Kelola laporan kendala transaksi, pembayaran, dan pertanyaan pelanggan secara langsung.
+      </p>
+    </div>
+  </div>
+
+  <!-- Status Filters Bar -->
+  <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+    <a href="/admin/tickets?status=open" class="btn {{if eq .StatusFilter "open"}}btn-primary{{else}}btn-outline{{end}} btn-sm">
+      ⏳ Menunggu Respon ({{.OpenCount}})
+    </a>
+    <a href="/admin/tickets?status=in_progress" class="btn {{if eq .StatusFilter "in_progress"}}btn-primary{{else}}btn-outline{{end}} btn-sm">
+      ⚙️ Sedang Ditangani ({{.InProgressCount}})
+    </a>
+    <a href="/admin/tickets?status=resolved" class="btn {{if eq .StatusFilter "resolved"}}btn-primary{{else}}btn-outline{{end}} btn-sm">
+      ✅ Selesai ({{.ResolvedCount}})
+    </a>
+    <a href="/admin/tickets?status=all" class="btn {{if eq .StatusFilter "all"}}btn-primary{{else}}btn-outline{{end}} btn-sm">
+      Semua Tiket
+    </a>
+  </div>
+
+  <!-- Tickets Table -->
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title">Daftar Tiket Aduan ({{len .Tickets}})</h3>
+    </div>
+
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>No. Tiket</th>
+            <th>Waktu Masuk</th>
+            <th>Pelapor & Kontak</th>
+            <th>Kategori & Judul</th>
+            <th>Terkait Order</th>
+            <th>Status</th>
+            <th>Petugas CS</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{range .Tickets}}
+          <tr>
+            <td>
+              <a href="/admin/tickets/{{.ID}}" style="font-family: var(--font-mono); font-weight: 800; color: #4F46E5;">
+                {{.ID}}
+              </a>
+            </td>
+            <td>
+              <span style="font-size: 0.8rem;">{{formatDateTime .CreatedAt}}</span>
+            </td>
+            <td>
+              <strong style="color: var(--text-main); font-size: 0.85rem;">{{.CustomerName}}</strong>
+              <div style="font-size: 0.75rem; color: var(--admin-muted);">{{.CustomerContact}}</div>
+            </td>
+            <td>
+              <span style="display: inline-block; font-size: 0.7rem; font-weight: 700; background: #F1F5F9; color: #475569; padding: 2px 6px; border-radius: 4px; margin-bottom: 3px;">
+                {{.Category}}
+              </span>
+              <div style="font-weight: 600; font-size: 0.85rem; color: var(--text-main);">{{.Subject}}</div>
+            </td>
+            <td>
+              {{if .OrderID}}
+              <a href="/admin/orders/{{.OrderID}}" style="font-family: var(--font-mono); font-size: 0.8rem; font-weight: 700; color: #0284C7;">
+                {{.OrderID}} &nearr;
+              </a>
+              {{else}}
+              <span style="color: var(--admin-muted); font-size: 0.8rem;">-</span>
+              {{end}}
+            </td>
+            <td>
+              {{if eq .Status "open"}}
+              <span class="badge" style="background: #FEF3C7; color: #92400E; border: 1px solid #FDE68A;">Baru (Open)</span>
+              {{else if eq .Status "in_progress"}}
+              <span class="badge" style="background: #E0F2FE; color: #0369A1; border: 1px solid #BAE6FD;">Diproses</span>
+              {{else}}
+              <span class="badge badge-success">Selesai</span>
+              {{end}}
+            </td>
+            <td>
+              {{if .AdminName}}
+              <span style="font-size: 0.8rem; font-weight: 700; color: #334155;">{{.AdminName}}</span>
+              {{else}}
+              <span style="font-size: 0.75rem; color: var(--admin-muted); font-style: italic;">Belum ada</span>
+              {{end}}
+            </td>
+            <td>
+              <a href="/admin/tickets/{{.ID}}" class="btn btn-outline btn-sm">
+                Tanggapi &rarr;
+              </a>
+            </td>
+          </tr>
+          {{else}}
+          <tr>
+            <td colspan="8" style="text-align: center; padding: 32px; color: var(--admin-muted);">
+              Tidak ada tiket aduan pada kategori filter ini.
+            </td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{{end}}

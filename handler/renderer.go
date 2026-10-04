@@ -47,6 +47,76 @@ var templateFuncs = template.FuncMap{
 		}
 		return "Rp " + res
 	},
+	"formatNumber": func(val interface{}) string {
+		var amount int64
+		switch v := val.(type) {
+		case int:
+			amount = int64(v)
+		case int64:
+			amount = v
+		case int32:
+			amount = int64(v)
+		case float64:
+			amount = int64(v)
+		default:
+			amount = 0
+		}
+		isNeg := amount < 0
+		if isNeg {
+			amount = -amount
+		}
+		s := strconv.FormatInt(amount, 10)
+		n := len(s)
+		res := s
+		if n > 3 {
+			var parts []string
+			remainder := n % 3
+			if remainder > 0 {
+				parts = append(parts, s[:remainder])
+			}
+			for i := remainder; i < n; i += 3 {
+				parts = append(parts, s[i:i+3])
+			}
+			res = strings.Join(parts, ".")
+		}
+		if isNeg {
+			return "-" + res
+		}
+		return res
+	},
+	"formatAZcoin": func(val interface{}) string {
+		var amount int64
+		switch v := val.(type) {
+		case int:
+			amount = int64(v)
+		case int64:
+			amount = v
+		case int32:
+			amount = int64(v)
+		case float64:
+			amount = int64(v)
+		default:
+			amount = 0
+		}
+		s := strconv.FormatInt(amount, 10)
+		n := len(s)
+		res := s
+		if n > 3 {
+			var parts []string
+			remainder := n % 3
+			if remainder > 0 {
+				parts = append(parts, s[:remainder])
+			}
+			for i := remainder; i < n; i += 3 {
+				parts = append(parts, s[i:i+3])
+			}
+			res = strings.Join(parts, ".")
+		}
+		return res + " AZcoin"
+	},
+	"azcoinPrice": func(price, cost, discountPercent int) int {
+		return (price - (price*discountPercent)/100)
+	},
 	"formatDate": func(t time.Time) string {
 		if t.IsZero() {
 			return "-"

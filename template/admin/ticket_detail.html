@@ -1,0 +1,157 @@
+{{define "content"}}
+<div>
+  <div style="margin-bottom: 20px;">
+    <a href="/admin/tickets" style="color: var(--accent); font-weight: 700; text-decoration: none; font-size: 0.88rem; display: inline-flex; align-items: center; gap: 6px;">
+      &larr; Kembali ke Daftar Aduan
+    </a>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 24px; align-items: flex-start;">
+    <!-- Left: Complaint & CS Reply Form -->
+    <div>
+      <div class="card" style="margin-bottom: 24px;">
+        <div class="card-header" style="justify-content: space-between;">
+          <div>
+            <span style="font-size: 0.75rem; color: var(--admin-muted); font-weight: 700; text-transform: uppercase;">Aduan Pelanggan</span>
+            <h3 class="card-title" style="font-family: var(--font-mono); font-size: 1.2rem; color: #4F46E5; margin-top: 2px;">
+              {{.Ticket.ID}}
+            </h3>
+          </div>
+          <div>
+            {{if eq .Ticket.Status "open"}}
+            <span class="badge" style="background: #FEF3C7; color: #92400E; border: 1px solid #FDE68A;">Baru (Open)</span>
+            {{else if eq .Ticket.Status "in_progress"}}
+            <span class="badge" style="background: #E0F2FE; color: #0369A1; border: 1px solid #BAE6FD;">Sedang Ditangani</span>
+            {{else}}
+            <span class="badge badge-success">Selesai Ditangani</span>
+            {{end}}
+          </div>
+        </div>
+
+        <div style="padding: 20px;">
+          <h2 style="font-size: 1.1rem; font-weight: 800; color: var(--text-main); margin-bottom: 14px;">
+            {{.Ticket.Subject}}
+          </h2>
+
+          <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+            <strong style="display: block; font-size: 0.78rem; color: var(--admin-muted); text-transform: uppercase; margin-bottom: 6px;">Kronologi Pelanggan:</strong>
+            <p style="margin: 0; line-height: 1.6; font-size: 0.92rem; color: var(--text-main); white-space: pre-line;">{{.Ticket.Description}}</p>
+          </div>
+
+          <div style="font-size: 0.8rem; color: var(--admin-muted);">
+            Diterima pada: <strong>{{formatDateTime .Ticket.CreatedAt}}</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reply Form Card -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">💬 Tanggapi Aduan & Tindak Lanjut CS</h3>
+        </div>
+        <div style="padding: 20px;">
+          <form action="/admin/tickets/{{.Ticket.ID}}/update" method="POST">
+            <div style="margin-bottom: 16px;">
+              <label class="form-label" style="font-size: 0.82rem; font-weight: 700; margin-bottom: 6px; display: block;">Status Penanganan *</label>
+              <select name="status" class="form-input" style="font-size: 0.9rem;" required>
+                <option value="in_progress" {{if eq .Ticket.Status "in_progress"}}selected{{end}}>⚙️ Sedang Ditangani (In Progress)</option>
+                <option value="resolved" {{if eq .Ticket.Status "resolved"}}selected{{end}}>✅ Selesai Ditangani (Resolved)</option>
+                <option value="open" {{if eq .Ticket.Status "open"}}selected{{end}}>⏳ Belum Ditangani (Open)</option>
+                <option value="closed" {{if eq .Ticket.Status "closed"}}selected{{end}}>🔒 Tutup Tiket (Closed)</option>
+              </select>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+              <label class="form-label" style="font-size: 0.82rem; font-weight: 700; margin-bottom: 6px; display: block;">
+                Tulis Balasan / Solusi untuk Pelanggan *
+              </label>
+              <textarea name="admin_reply" class="form-input" rows="6" placeholder="Tuliskan penjelasan atau solusi untuk pembeli (misal: 'Halo kak, serial number pesanan sudah kami teruskan ulang dan diamond sudah sukses terkirim...')" style="font-size: 0.9rem;" required>{{.Ticket.AdminReply}}</textarea>
+              <span style="display: block; font-size: 0.75rem; color: var(--admin-muted); margin-top: 6px;">
+                Balasan ini akan tampil secara real-time saat pelanggan mengecek halaman tiket aduan mereka.
+              </span>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+              <button type="submit" class="btn btn-primary" style="padding: 10px 24px;">
+                Simpan Tanggapan & Perbarui Status
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Customer Info & Linked Order -->
+    <div>
+      <!-- Customer Card -->
+      <div class="card" style="margin-bottom: 20px;">
+        <div class="card-header">
+          <h3 class="card-title">Informasi Pelapor</h3>
+        </div>
+        <div style="padding: 18px;">
+          <div style="margin-bottom: 12px;">
+            <span style="font-size: 0.75rem; color: var(--admin-muted); display: block;">Nama Pelanggan</span>
+            <strong style="color: var(--text-main); font-size: 0.95rem;">{{.Ticket.CustomerName}}</strong>
+          </div>
+          <div style="margin-bottom: 12px;">
+            <span style="font-size: 0.75rem; color: var(--admin-muted); display: block;">Kontak (WhatsApp / Email)</span>
+            <strong style="color: #0284C7; font-size: 0.95rem;">{{.Ticket.CustomerContact}}</strong>
+          </div>
+          <div>
+            <span style="font-size: 0.75rem; color: var(--admin-muted); display: block;">Kategori Laporan</span>
+            <span style="display: inline-block; font-size: 0.78rem; font-weight: 700; background: #EEF2FF; color: #4F46E5; padding: 3px 8px; border-radius: 4px; margin-top: 4px;">
+              {{.Ticket.Category}}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Linked Order Card (if any) -->
+      {{if .Order}}
+      <div class="card">
+        <div class="card-header" style="justify-content: space-between;">
+          <h3 class="card-title">Data Pesanan Terkait</h3>
+          <a href="/admin/orders/{{.Order.ID}}" class="btn btn-outline btn-sm" target="_blank">
+            Lihat Order &nearr;
+          </a>
+        </div>
+        <div style="padding: 18px;">
+          <div style="margin-bottom: 10px;">
+            <span style="font-size: 0.72rem; color: var(--admin-muted); display: block;">Order ID</span>
+            <strong style="font-family: var(--font-mono); color: var(--text-main);">{{.Order.ID}}</strong>
+          </div>
+          <div style="margin-bottom: 10px;">
+            <span style="font-size: 0.72rem; color: var(--admin-muted); display: block;">Game & Produk</span>
+            <strong style="color: var(--text-main); font-size: 0.9rem;">{{.Order.GameName}} - {{.Order.ProductName}}</strong>
+          </div>
+          <div style="margin-bottom: 10px;">
+            <span style="font-size: 0.72rem; color: var(--admin-muted); display: block;">User ID Tujuan</span>
+            <code style="font-size: 0.85rem;">{{.Order.FullCustomerNo}}</code>
+          </div>
+          <div style="margin-bottom: 10px;">
+            <span style="font-size: 0.72rem; color: var(--admin-muted); display: block;">Total Bayar</span>
+            <strong style="color: #E11D48;">{{formatRupiah .Order.Price}}</strong>
+          </div>
+          <div style="margin-bottom: 10px;">
+            <span style="font-size: 0.72rem; color: var(--admin-muted); display: block;">Status Pesanan</span>
+            <span class="badge {{if eq .Order.Status "success"}}badge-success{{else if eq .Order.Status "failed"}}badge-danger{{else}}badge-warning{{end}}">
+              {{.Order.Status}}
+            </span>
+          </div>
+          {{if .Order.DigiflazzSN}}
+          <div>
+            <span style="font-size: 0.72rem; color: var(--admin-muted); display: block;">SN Digiflazz</span>
+            <code style="font-size: 0.8rem; word-break: break-all;">{{.Order.DigiflazzSN}}</code>
+          </div>
+          {{end}}
+        </div>
+      </div>
+      {{else if .Ticket.OrderID}}
+      <div class="card" style="padding: 18px; text-align: center; color: var(--admin-muted); font-size: 0.85rem;">
+        ID Pesanan <code>{{.Ticket.OrderID}}</code> tidak ditemukan di database.
+      </div>
+      {{end}}
+    </div>
+  </div>
+</div>
+{{end}}

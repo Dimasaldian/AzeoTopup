@@ -1,0 +1,206 @@
+{{define "content"}}
+<div>
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 22px; flex-wrap: wrap; gap: 12px;">
+    <div>
+      <h1 style="font-size: 1.35rem; font-weight: 800;">Manajemen Akun Admin & Staf</h1>
+      <p style="font-size: 0.82rem; color: var(--admin-muted); margin-top: 2px;">
+        Kelola hak akses operator CS dan Superadmin untuk keamanan data finansial dan operasional.
+      </p>
+    </div>
+  </div>
+
+  <!-- Role info banner -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 24px;">
+    <div style="background: #FFFFFF; border: 1.5px solid #E2E8F0; border-radius: 12px; padding: 16px 20px;">
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+        <span style="background: #4F46E5; color: #FFFFFF; font-size: 0.72rem; font-weight: 800; padding: 3px 8px; border-radius: 4px; text-transform: uppercase;">Superadmin (Owner)</span>
+      </div>
+      <p style="font-size: 0.8rem; color: #475569; margin: 0; line-height: 1.5;">
+        Akses penuh ke semua menu: Pengaturan API Digiflazz & Gateway, Generate Voucher AZcoin, Laporan Keuangan/Margin, serta Manajemen Admin.
+      </p>
+    </div>
+    <div style="background: #FFFFFF; border: 1.5px solid #E2E8F0; border-radius: 12px; padding: 16px 20px;">
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+        <span style="background: #0284C7; color: #FFFFFF; font-size: 0.72rem; font-weight: 800; padding: 3px 8px; border-radius: 4px; text-transform: uppercase;">Admin (Operator / CS)</span>
+      </div>
+      <p style="font-size: 0.8rem; color: #475569; margin: 0; line-height: 1.5;">
+        Akses operasional harian: Memantau pesanan masuk, retry transaksi Digiflazz, cek User ID pembeli. Rahasia API, margin laba & generate voucher disembunyikan.
+      </p>
+    </div>
+  </div>
+
+  <!-- Add New Admin Card -->
+  <div class="card" style="margin-bottom: 24px;">
+    <div class="card-header">
+      <h3 class="card-title">+ Tambah Akun Admin Baru</h3>
+    </div>
+    <div style="padding: 20px;">
+      <form action="/admin/admins" method="POST" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; align-items: flex-end;">
+        <div>
+          <label class="form-label" style="font-size: 0.8rem; font-weight: 700; margin-bottom: 6px; display: block;">Username *</label>
+          <input type="text" name="username" class="form-input" placeholder="contoh: cs_dina" required autocomplete="off">
+        </div>
+        <div>
+          <label class="form-label" style="font-size: 0.8rem; font-weight: 700; margin-bottom: 6px; display: block;">Nama Lengkap / Panggilan *</label>
+          <input type="text" name="display_name" class="form-input" placeholder="contoh: Dina (CS Shift Pagi)" required>
+        </div>
+        <div>
+          <label class="form-label" style="font-size: 0.8rem; font-weight: 700; margin-bottom: 6px; display: block;">Password *</label>
+          <input type="password" name="password" class="form-input" placeholder="Min. 6 karakter" required minlength="6">
+        </div>
+        <div>
+          <label class="form-label" style="font-size: 0.8rem; font-weight: 700; margin-bottom: 6px; display: block;">Tingkat Akses (Role) *</label>
+          <select name="role" class="form-input" required>
+            <option value="admin">Admin (CS & Operasional)</option>
+            <option value="superadmin">Superadmin (Owner - Akses Penuh)</option>
+          </select>
+        </div>
+        <div>
+          <button type="submit" class="btn btn-primary" style="width: 100%; height: 42px;">Buat Akun Admin</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Admin Users Table -->
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title">Daftar Admin Terdaftar ({{len .Admins}})</h3>
+    </div>
+
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Admin</th>
+            <th>Username</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th>Terakhir Login</th>
+            <th>Dibuat</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{range .Admins}}
+          <tr>
+            <td>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 36px; height: 36px; border-radius: 8px; background: {{if eq .Role "superadmin"}}#4F46E5{{else}}#0284C7{{end}}; color: #FFF; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.95rem;">
+                  {{slice .DisplayName 0 1}}
+                </div>
+                <div>
+                  <strong style="color: var(--text-main);">{{.DisplayName}}</strong>
+                  <div style="font-size: 0.72rem; color: var(--admin-muted);">ID: #{{.ID}} {{if eq .ID $.AdminUser.ID}}<span style="color: #4F46E5; font-weight: 700;">(Anda)</span>{{end}}</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <code>{{.Username}}</code>
+            </td>
+            <td>
+              {{if eq .Role "superadmin"}}
+              <span class="badge" style="background: #EEF2FF; color: #4F46E5; border: 1px solid #C7D2FE; font-weight: 800;">SUPERADMIN</span>
+              {{else}}
+              <span class="badge" style="background: #F0F9FF; color: #0284C7; border: 1px solid #BAE6FD; font-weight: 800;">ADMIN CS</span>
+              {{end}}
+            </td>
+            <td>
+              {{if .IsActive}}
+              <span class="badge badge-success">Aktif</span>
+              {{else}}
+              <span class="badge" style="background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA;">Nonaktif</span>
+              {{end}}
+            </td>
+            <td>
+              {{if .LastLoginAt}}
+                <span style="font-size: 0.8rem;">{{formatDateTime .LastLoginAt}}</span>
+              {{else}}
+                <span style="font-size: 0.8rem; color: var(--admin-muted);">Belum pernah</span>
+              {{end}}
+            </td>
+            <td>
+              <span style="font-size: 0.8rem;">{{formatDate .CreatedAt}}</span>
+            </td>
+            <td>
+              <div style="display: flex; gap: 6px; align-items: center;">
+                {{if ne .ID $.AdminUser.ID}}
+                <!-- Toggle Status -->
+                <form action="/admin/admins/{{.ID}}/toggle" method="POST" style="margin: 0;">
+                  <button type="submit" class="btn btn-outline btn-sm" title="Ubah status aktif/nonaktif">
+                    {{if .IsActive}}Nonaktifkan{{else}}Aktifkan{{end}}
+                  </button>
+                </form>
+
+                <!-- Edit Button (trigger modal) -->
+                <button type="button" class="btn btn-outline btn-sm" onclick="openEditAdminModal('{{.ID}}', '{{.DisplayName}}', '{{.Role}}', '{{if .IsActive}}1{{else}}0{{end}}')">
+                  Edit
+                </button>
+
+                <!-- Delete -->
+                <form action="/admin/admins/{{.ID}}/delete" method="POST" style="margin: 0;" onsubmit="return confirm('Apakah Anda yakin ingin menghapus akun admin ini? Tindakan ini tidak dapat dibatalkan.');">
+                  <button type="submit" class="btn btn-danger btn-sm" style="padding: 4px 8px; font-size: 0.75rem;">
+                    Hapus
+                  </button>
+                </form>
+                {{else}}
+                <span style="font-size: 0.75rem; color: var(--admin-muted); font-style: italic;">Akun Anda saat ini</span>
+                {{end}}
+              </div>
+            </td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Edit Admin Modal -->
+  <div id="editAdminModal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); z-index: 999; align-items: center; justify-content: center;">
+    <div style="background: #FFFFFF; border-radius: 12px; width: 100%; max-width: 440px; padding: 24px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);">
+      <h3 style="margin-top: 0; margin-bottom: 16px; font-size: 1.15rem; font-weight: 800;">Edit Akun Admin</h3>
+      <form id="editAdminForm" method="POST">
+        <div style="margin-bottom: 14px;">
+          <label class="form-label" style="font-size: 0.8rem; font-weight: 700; margin-bottom: 6px; display: block;">Nama Lengkap</label>
+          <input type="text" name="display_name" id="edit_display_name" class="form-input" required>
+        </div>
+        <div style="margin-bottom: 14px;">
+          <label class="form-label" style="font-size: 0.8rem; font-weight: 700; margin-bottom: 6px; display: block;">Role</label>
+          <select name="role" id="edit_role" class="form-input" required>
+            <option value="admin">Admin (CS & Operasional)</option>
+            <option value="superadmin">Superadmin (Owner - Akses Penuh)</option>
+          </select>
+        </div>
+        <div style="margin-bottom: 14px;">
+          <label class="form-label" style="font-size: 0.8rem; font-weight: 700; margin-bottom: 6px; display: block;">Ganti Password (Kosongkan jika tidak diubah)</label>
+          <input type="password" name="new_password" class="form-input" placeholder="Password baru (opsional)" minlength="6">
+        </div>
+        <div style="margin-bottom: 20px;">
+          <label style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer;">
+            <input type="checkbox" name="is_active" id="edit_is_active" value="1">
+            Status Akun Aktif
+          </label>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 10px;">
+          <button type="button" class="btn btn-outline btn-sm" onclick="closeEditAdminModal()">Batal</button>
+          <button type="submit" class="btn btn-primary btn-sm">Simpan Perubahan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function openEditAdminModal(id, name, role, isActive) {
+      document.getElementById('editAdminForm').action = '/admin/admins/' + id + '/edit';
+      document.getElementById('edit_display_name').value = name;
+      document.getElementById('edit_role').value = role;
+      document.getElementById('edit_is_active').checked = (isActive === '1');
+      document.getElementById('editAdminModal').style.display = 'flex';
+    }
+
+    function closeEditAdminModal() {
+      document.getElementById('editAdminModal').style.display = 'none';
+    }
+  </script>
+</div>
+{{end}}

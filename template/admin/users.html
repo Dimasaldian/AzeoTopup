@@ -1,0 +1,84 @@
+{{define "content"}}
+<div>
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 22px; flex-wrap: wrap; gap: 12px;">
+    <div>
+      <h1 style="font-size: 1.35rem; font-weight: 800;">Daftar Pengguna / Member</h1>
+      <p style="font-size: 0.82rem; color: var(--admin-muted); margin-top: 2px;">
+        Data akun pelanggan terdaftar dan kepemilikan saldo dompet AZcoin.
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header" style="flex-wrap: wrap; gap: 10px;">
+      <h3 class="card-title">Semua Member ({{len .Users}})</h3>
+      <form action="/admin/users" method="GET" style="display: flex; gap: 8px; margin: 0;">
+        <input type="text" name="q" class="form-input" style="padding: 6px 12px; font-size: 0.85rem;" placeholder="Cari email / nama..." value="{{.Search}}">
+        <button type="submit" class="btn btn-outline btn-sm">Cari</button>
+      </form>
+    </div>
+
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Member</th>
+            <th>Email</th>
+            <th>Saldo AZcoin</th>
+            <th>Total Order</th>
+            <th>Status</th>
+            <th>Terakhir Login</th>
+            <th>Bergabung</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{range .Users}}
+          <tr>
+            <td>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 32px; height: 32px; border-radius: 50%; background: #4F46E5; color: #FFF; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.85rem;">
+                  {{.Initial}}
+                </div>
+                <div>
+                  <strong style="color: var(--text-main);">{{.Name}}</strong>
+                  <div style="font-size: 0.72rem; color: var(--admin-muted);">ID: #{{.ID}}</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <code>{{.Email}}</code>
+            </td>
+            <td>
+              <strong style="color: #4F46E5; font-size: 0.95rem;">{{formatNumber .Balance}} AZC</strong>
+              <div style="font-size: 0.72rem; color: var(--admin-muted);">≈ {{formatRupiah .Balance}}</div>
+            </td>
+            <td>
+              <strong>{{.OrderCount}}</strong> pesanan
+            </td>
+            <td>
+              {{if .IsActive}}
+              <span class="badge badge-success">Aktif</span>
+              {{else}}
+              <span class="badge badge-danger">Nonaktif</span>
+              {{end}}
+            </td>
+            <td style="font-size: 0.78rem; color: var(--admin-muted);">
+              {{formatDateTimePtr .LastLoginAt}}
+            </td>
+            <td style="font-size: 0.78rem; color: var(--admin-muted);">
+              {{formatDateTime .CreatedAt}}
+            </td>
+          </tr>
+          {{else}}
+          <tr>
+            <td colspan="7" style="text-align: center; padding: 36px; color: var(--admin-muted);">
+              Belum ada member terdaftar.
+            </td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{{end}}

@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 
+	"topupku/middleware"
 	"topupku/model"
 	"topupku/service"
 	"topupku/store"
@@ -34,9 +35,12 @@ func (h *PageHandler) PageHome(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	user := middleware.GetUser(r)
+
 	data := map[string]interface{}{
 		"Title": "Azeotopup — Top Up Game Termurah & Instan 24 Jam",
 		"Games": games,
+		"User":  user,
 	}
 
 	RenderTemplate(w, "template/layout.html", []string{
@@ -87,6 +91,15 @@ func (h *PageHandler) PageGame(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	user := middleware.GetUser(r)
+	if user != nil {
+		if refreshed, err := h.store.GetUserByID(user.ID); err == nil && refreshed != nil {
+			user = refreshed
+		}
+	}
+
+	discountPercent := h.store.GetAZcoinDiscountPercent()
+
 	data := map[string]interface{}{
 		"Title":           game.Name + " — Top Up Instan | Azeotopup",
 		"Game":            game,
@@ -94,6 +107,8 @@ func (h *PageHandler) PageGame(w http.ResponseWriter, r *http.Request) {
 		"PromoProducts":   promoProducts,
 		"GroupedProducts": groupedProducts,
 		"GroupNames":      groupNames,
+		"User":            user,
+		"DiscountPercent": discountPercent,
 	}
 
 	RenderTemplate(w, "template/layout.html", []string{
@@ -116,10 +131,13 @@ func (h *PageHandler) PageOrderStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	user := middleware.GetUser(r)
+
 	data := map[string]interface{}{
 		"Title":     "Pesanan " + order.ID + " | Azeotopup",
 		"Order":     order,
 		"IsDevMode": h.isDevMode,
+		"User":      user,
 	}
 
 	RenderTemplate(w, "template/layout.html", []string{

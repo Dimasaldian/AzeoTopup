@@ -1,0 +1,204 @@
+{{define "content"}}
+<div class="container" style="max-width: 820px; padding-top: 36px; padding-bottom: 60px;">
+  <style>
+    .support-form-card {
+      background: #FFFFFF;
+      border: 1.5px solid #E2E8F0;
+      border-radius: 16px;
+      padding: 32px;
+      box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 18px;
+      width: 100%;
+    }
+    .form-label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #0F172A;
+      margin-bottom: 2px;
+    }
+    .form-control {
+      display: block;
+      width: 100%;
+      padding: 12px 16px;
+      font-family: inherit;
+      font-size: 0.92rem;
+      color: #0F172A;
+      background: #FFFFFF;
+      border: 1.5px solid #CBD5E1;
+      border-radius: 10px;
+      transition: all 0.2s ease;
+      outline: none;
+      box-sizing: border-box;
+    }
+    .form-control:focus {
+      border-color: #4F46E5;
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+      background: #FFFFFF;
+    }
+    .form-control::placeholder {
+      color: #94A3B8;
+    }
+    select.form-control {
+      cursor: pointer;
+      background-color: #FFFFFF;
+    }
+    textarea.form-control {
+      resize: vertical;
+      min-height: 120px;
+      line-height: 1.6;
+    }
+    .form-help {
+      display: block;
+      font-size: 0.76rem;
+      color: #64748B;
+      margin-top: 2px;
+      line-height: 1.4;
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 18px;
+      width: 100%;
+    }
+    .btn-submit-support {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: #4F46E5;
+      color: #FFFFFF;
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 700;
+      padding: 13px 32px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 8px rgba(79, 70, 229, 0.25);
+    }
+    .btn-submit-support:hover {
+      background: #4338CA;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
+    }
+    .check-ticket-bar {
+      background: #F8FAFC;
+      border: 1.5px solid #E2E8F0;
+      border-radius: 14px;
+      padding: 18px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+  </style>
+
+  <!-- Header -->
+  <div style="text-align: center; margin-bottom: 32px;">
+    <span style="display: inline-block; background: #EEF2FF; color: #4F46E5; font-size: 0.78rem; font-weight: 800; padding: 4px 14px; border-radius: 999px; margin-bottom: 10px; letter-spacing: 0.05em; text-transform: uppercase;">
+      Layanan Pengaduan & Bantuan Pelanggan
+    </span>
+    <h1 style="font-size: 1.9rem; font-weight: 800; color: #0F172A; margin: 0 0 8px 0; letter-spacing: -0.02em;">
+      Pusat Bantuan & Layanan CS
+    </h1>
+    <p style="color: #64748B; font-size: 0.92rem; max-width: 520px; margin: 0 auto; line-height: 1.5;">
+      Mengalami kendala top-up, pembayaran, atau akun? Sampaikan laporan Anda, tim Customer Service kami siap membantu secepatnya.
+    </p>
+  </div>
+
+  {{if .Message}}
+  <div class="alert alert-success" style="margin-bottom: 20px;">{{.Message}}</div>
+  {{end}}
+  {{if .Error}}
+  <div class="alert alert-error" style="margin-bottom: 20px;">{{.Error}}</div>
+  {{end}}
+
+  <!-- Check Existing Ticket Bar -->
+  <div class="check-ticket-bar">
+    <div>
+      <strong style="color: #0F172A; display: block; font-size: 0.92rem;">Sudah punya No. Tiket Pengaduan?</strong>
+      <span style="font-size: 0.8rem; color: #64748B;">Cek status penanganan dan balasan CS dari tiket Anda.</span>
+    </div>
+    <form onsubmit="event.preventDefault(); const t = document.getElementById('ticket_search_input').value.trim(); if(t) window.location.href='/bantuan/'+encodeURIComponent(t);" style="display: flex; gap: 8px; margin: 0; align-items: center;">
+      <input type="text" id="ticket_search_input" class="form-control" placeholder="Contoh: CS-20261004-ABCD" style="width: 210px; padding: 9px 14px; font-size: 0.85rem;" required>
+      <button type="submit" class="btn-outline" style="padding: 9px 16px; font-size: 0.85rem; border-radius: 10px;">Cek Tiket</button>
+    </form>
+  </div>
+
+  <!-- Main Complaint Form Card -->
+  <div class="support-form-card">
+    <div style="border-bottom: 1.5px solid #F1F5F9; padding-bottom: 14px; margin-bottom: 22px;">
+      <h2 style="font-size: 1.15rem; font-weight: 800; color: #0F172A; margin: 0;">
+        Formulir Pengaduan Pelanggan
+      </h2>
+      <p style="font-size: 0.8rem; color: #64748B; margin: 4px 0 0 0;">
+        Silakan isi data berikut dengan benar agar tim CS kami dapat memverifikasi kendala Anda.
+      </p>
+    </div>
+
+    <form action="/bantuan" method="POST">
+      <!-- Row 1: Name & Contact -->
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Nama Lengkap / Panggilan *</label>
+          <input type="text" name="customer_name" class="form-control" placeholder="Masukkan nama Anda" value="{{if .User}}{{.User.Name}}{{end}}" required autocomplete="name">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Kontak (WhatsApp / Email Aktif) *</label>
+          <input type="text" name="customer_contact" class="form-control" placeholder="08xxxxxxxxxx atau email@anda.com" value="{{if .User}}{{.User.Email}}{{end}}" required autocomplete="email">
+          <span class="form-help">Untuk konfirmasi dan balasan dari tim CS kami.</span>
+        </div>
+      </div>
+
+      <!-- Row 2: Order ID & Category -->
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Nomor ID Pesanan (Opsional)</label>
+          <input type="text" name="order_id" class="form-control" placeholder="Contoh: TK-20261004-XXXX" value="{{.OrderID}}">
+          <span class="form-help">Isi jika pengaduan berhubungan dengan transaksi tertentu.</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Kategori Kendala *</label>
+          <select name="category" class="form-control" required>
+            <option value="item_pending">Diamond / Item Game Belum Masuk</option>
+            <option value="payment_problem">Kendala Pembayaran (QRIS / E-Wallet)</option>
+            <option value="wrong_userid">Salah Ketik User ID / Zone ID</option>
+            <option value="azcoin_wallet">Saldo AZcoin / Redeem Voucher</option>
+            <option value="other">Pertanyaan / Kendala Lainnya</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Subject -->
+      <div class="form-group">
+        <label class="form-label">Judul Singkat Kendala *</label>
+        <input type="text" name="subject" class="form-control" placeholder="Contoh: Sudah bayar QRIS tapi status masih belum sukses" required>
+      </div>
+
+      <!-- Description -->
+      <div class="form-group">
+        <label class="form-label">Rincian / Kronologi Kendala *</label>
+        <textarea name="description" class="form-control" rows="5" placeholder="Tuliskan secara lengkap detail masalah Anda, waktu transfer, atau bukti transaksi jika ada..." required></textarea>
+      </div>
+
+      <!-- Submit Button -->
+      <div style="display: flex; justify-content: flex-end; margin-top: 8px;">
+        <button type="submit" class="btn-submit-support">
+          Kirimkan Pengaduan &rarr;
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{{end}}

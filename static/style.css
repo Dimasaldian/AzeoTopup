@@ -1795,3 +1795,794 @@ textarea {
     font-size: 0.85rem;
   }
 }
+
+/* ==========================================================================
+   AZCOIN & CUSTOMER ACCOUNT STYLES (v3.1)
+   ========================================================================== */
+
+/* Header Navigation Auth & AZcoin Badge */
+.nav-azcoin-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+  border: 1px solid #F59E0B;
+  color: #78350F;
+  padding: 6px 13px;
+  border-radius: var(--radius-pill);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 1px 3px rgba(245, 158, 11, 0.2);
+  transition: all 0.15s ease;
+}
+
+.nav-azcoin-badge:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(245, 158, 11, 0.3);
+}
+
+.nav-azcoin-badge .azcoin-icon {
+  font-size: 0.95rem;
+}
+
+.nav-azcoin-badge .azcoin-amount {
+  font-family: var(--font-mono);
+  font-weight: 800;
+}
+
+.nav-azcoin-badge .azcoin-unit {
+  font-size: 0.72rem;
+  opacity: 0.85;
+}
+
+.nav-user-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px 5px 6px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-pill);
+  color: var(--text-main);
+  text-decoration: none;
+  font-size: 0.82rem;
+  font-weight: 700;
+  transition: all 0.15s ease;
+}
+
+.nav-user-btn:hover {
+  border-color: var(--primary);
+  background: var(--bg-subtle);
+}
+
+.nav-user-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.nav-btn-login {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: var(--primary);
+  color: #FFFFFF;
+  border-radius: var(--radius-pill);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.nav-btn-login:hover {
+  background: var(--accent);
+  color: #FFFFFF;
+}
+
+/* Auth Pages (Login & Register) */
+.auth-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 180px);
+  padding: 40px 16px;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 440px;
+  background: #FFFFFF;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: 36px 32px;
+  box-shadow: var(--shadow-md);
+}
+
+.auth-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.auth-badge-az {
+  display: inline-block;
+  padding: 4px 12px;
+  background: #EEF2FF;
+  color: #4F46E5;
+  border: 1px solid #C7D2FE;
+  border-radius: var(--radius-pill);
+  font-size: 0.78rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.auth-title {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: -0.02em;
+}
+
+.auth-subtitle {
+  font-size: 0.86rem;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+
+.auth-alert {
+  margin-bottom: 20px;
+  font-size: 0.85rem;
+}
+
+.azcoin-benefit-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  background: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  border-radius: var(--radius-sm);
+  margin-bottom: 22px;
+}
+
+.azcoin-benefit-icon {
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.azcoin-benefit-text {
+  font-size: 0.8rem;
+  color: #166534;
+  line-height: 1.45;
+}
+
+.azcoin-benefit-text strong {
+  display: block;
+  font-size: 0.85rem;
+  margin-bottom: 2px;
+}
+
+.azcoin-perks-list {
+  margin-bottom: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.perk-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.82rem;
+  color: var(--text-main);
+}
+
+.perk-check {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #DCFCE7;
+  color: #166534;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.auth-footer-links {
+  text-align: center;
+  margin-top: 24px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.auth-link {
+  color: var(--accent);
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.auth-link-subtle {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+/* User Account Dashboard */
+.account-header-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #FFFFFF;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 24px 28px;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow-xs);
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.account-user-profile {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.account-avatar-large {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0F172A 0%, #312E81 100%);
+  color: #FFFFFF;
+  font-size: 1.35rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.account-user-title {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: -0.02em;
+}
+
+.account-user-email {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.account-member-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  background: #FEF3C7;
+  color: #92400E;
+  border: 1px solid #FCD34D;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  margin-top: 6px;
+}
+
+.btn-account-logout {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-account-logout:hover {
+  background: #FEE2E2;
+  border-color: #FCA5A5;
+  color: #991B1B;
+}
+
+.account-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+@media (max-width: 800px) {
+  .account-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.azcoin-wallet-card {
+  background: linear-gradient(135deg, #1E1B4B 0%, #0F172A 100%);
+  color: #FFFFFF;
+  border-radius: var(--radius-md);
+  padding: 28px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.wallet-badge-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.wallet-pill {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #FDE68A;
+}
+
+.wallet-discount-tag {
+  background: rgba(99, 102, 241, 0.3);
+  border: 1px solid rgba(165, 180, 252, 0.3);
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #C7D2FE;
+}
+
+.wallet-balance-value {
+  font-size: 2.2rem;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  letter-spacing: -0.02em;
+  color: #FFFFFF;
+}
+
+.wallet-balance-unit {
+  font-size: 0.85rem;
+  color: #94A3B8;
+  margin-top: 4px;
+}
+
+.wallet-rate-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.78rem;
+  color: #CBD5E1;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  margin: 18px 0;
+  line-height: 1.45;
+}
+
+.wallet-deposit-info {
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 0.82rem;
+}
+
+.wallet-deposit-info strong {
+  display: block;
+  color: #FDE68A;
+  margin-bottom: 4px;
+}
+
+.wallet-deposit-info p {
+  color: #94A3B8;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  margin-bottom: 12px;
+}
+
+.btn-deposit-wa {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #10B981;
+  color: #FFFFFF;
+  font-size: 0.8rem;
+  font-weight: 700;
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.btn-deposit-wa:hover {
+  background: #059669;
+}
+
+/* Account Tabs */
+.account-tab-buttons {
+  display: flex;
+  gap: 10px;
+  border-bottom: 2px solid var(--border-light);
+  margin-bottom: 20px;
+}
+
+.account-tab-btn {
+  padding: 10px 18px;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin-bottom: -2px;
+}
+
+.account-tab-btn.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+/* Payment Selector in Game Page */
+.payment-method-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+}
+
+.payment-list-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: #FFFFFF;
+  border: 1.5px solid #E2E8F0;
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+  user-select: none;
+}
+
+.payment-list-item:hover {
+  background: #F8FAFC;
+  border-color: #CBD5E1;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+}
+
+.payment-list-item.selected {
+  border-color: var(--accent);
+  background: #F8FAFF;
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2), 0 4px 14px rgba(79, 70, 229, 0.06);
+}
+
+.payment-ribbon {
+  position: absolute;
+  top: 13px;
+  right: -32px;
+  background: linear-gradient(135deg, #F97316 0%, #EA580C 100%);
+  color: #FFFFFF;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 3px 34px;
+  transform: rotate(45deg);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  pointer-events: none;
+  z-index: 5;
+}
+
+.payment-item-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 14px;
+}
+
+.payment-item-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+  min-width: 0;
+}
+
+.payment-coin-icon {
+  font-size: 1.8rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.payment-item-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.payment-item-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-main);
+  line-height: 1.25;
+}
+
+.payment-item-sub {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #DC2626;
+  line-height: 1.2;
+}
+
+.payment-item-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  text-align: right;
+  flex-shrink: 0;
+  padding-right: 22px;
+  z-index: 2;
+}
+
+.payment-item-price {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #DC2626;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+/* QRIS Brand Strip */
+.qris-brand-strip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 3px;
+  flex-wrap: wrap;
+}
+
+.qris-logo-tag {
+  background: #0F172A;
+  color: #FFFFFF;
+  font-size: 0.68rem;
+  font-weight: 900;
+  padding: 2px 7px;
+  border-radius: 4px;
+  letter-spacing: 0.04em;
+  display: inline-block;
+}
+
+.qris-sub-tag {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* E-Wallet Badges */
+.payment-ewallet-logos {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.ewallet-badge {
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 4px;
+  color: #FFFFFF;
+  letter-spacing: 0.02em;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1.3;
+}
+
+.ewallet-badge.ovo { background: #4C2A86; }
+.ewallet-badge.gopay { background: #00AED6; }
+.ewallet-badge.dana { background: #118EEA; }
+.ewallet-badge.shopeepay { background: #EE4D2D; }
+.ewallet-badge.linkaja { background: #DF192A; }
+
+/* Accordion for E-Wallet */
+.payment-accordion-arrow {
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.25s ease;
+}
+
+.payment-list-item-accordion.open .payment-accordion-arrow {
+  transform: rotate(180deg);
+}
+
+.payment-accordion-body {
+  display: none;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border-light);
+}
+
+.payment-list-item-accordion.open .payment-accordion-body {
+  display: block;
+}
+
+.ewallet-hint-text {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* Login Banner in AZcoin Card */
+.payment-login-banner {
+  margin-top: 12px;
+  padding: 9px 12px;
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  color: #92400E;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.payment-login-banner .btn-login-inline {
+  font-weight: 700;
+  color: #B45309;
+  text-decoration: underline;
+  flex-shrink: 0;
+}
+
+/* AZcoin tag on product cards */
+.azcoin-price-tag {
+  margin-top: 3px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #4F46E5;
+}
+
+/* ==========================================================================
+   Universal Form & Input Styling
+   ========================================================================== */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 4px;
+}
+
+.form-control {
+  display: block;
+  width: 100%;
+  padding: 12px 16px;
+  font-family: inherit;
+  font-size: 0.92rem;
+  color: var(--text-main);
+  background: #FFFFFF;
+  border: 1.5px solid var(--border-medium);
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.form-control:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+  background: #FFFFFF;
+}
+
+.form-control::placeholder {
+  color: var(--text-subtle);
+}
+
+select.form-control {
+  appearance: auto;
+  cursor: pointer;
+}
+
+textarea.form-control {
+  resize: vertical;
+  min-height: 120px;
+  line-height: 1.6;
+}
+
+.form-help {
+  display: block;
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+  line-height: 1.45;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  width: 100%;
+}
+
+/* Primary and Outline Buttons */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--accent);
+  color: #FFFFFF;
+  font-family: inherit;
+  font-size: 0.92rem;
+  font-weight: 700;
+  padding: 12px 26px;
+  border-radius: var(--radius-sm);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.25);
+  text-decoration: none;
+}
+
+.btn-primary:hover {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
+  color: #FFFFFF;
+}
+
+.btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #FFFFFF;
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  padding: 10px 18px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border-medium);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.btn-outline:hover {
+  background: var(--bg-subtle);
+  border-color: var(--text-muted);
+}
+

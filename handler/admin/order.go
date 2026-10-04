@@ -121,10 +121,18 @@ func (h *OrderAdminHandler) OrderRefund(w http.ResponseWriter, r *http.Request) 
 		note = "Refund diproses manual oleh admin"
 	}
 
-	_ = h.orderSvc.RefundOrder(orderID, note)
+	refundedCoins, err := h.orderSvc.RefundOrder(orderID, note)
+	if err != nil {
+		http.Redirect(w, r, fmt.Sprintf("/admin/orders/%s?error=Gagal+refund:+%s", orderID, err.Error()), http.StatusSeeOther)
+		return
+	}
 	_ = h.store.CreateAuditLog(adminUser.ID, "order.refund", "order", orderID, "", "Marked as refund: "+note)
 
-	http.Redirect(w, r, fmt.Sprintf("/admin/orders/%s?msg=Status+diubah+menjadi+Refund", orderID), http.StatusSeeOther)
+	msg := "Status+diubah+menjadi+Refund"
+	if refundedCoins {
+		msg = "Status+Refund+—+AZcoin+otomatis+dikembalikan+ke+saldo+user"
+	}
+	http.Redirect(w, r, fmt.Sprintf("/admin/orders/%s?msg=%s", orderID, msg), http.StatusSeeOther)
 }
 
 func (h *OrderAdminHandler) OrderNote(w http.ResponseWriter, r *http.Request) {

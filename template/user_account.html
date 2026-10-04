@@ -1,0 +1,249 @@
+{{define "content"}}
+<div class="container" style="padding-top: 24px; padding-bottom: 60px;">
+  <!-- User Header Profile Card -->
+  <div class="account-header-card">
+    <div class="account-user-profile">
+      <div class="account-avatar-large">{{.User.Initial}}</div>
+      <div class="account-user-details">
+        <h1 class="account-user-title">{{.User.Name}}</h1>
+        <p class="account-user-email">{{.User.Email}}</p>
+        <span class="account-member-badge">Member AZcoin Terverifikasi</span>
+      </div>
+    </div>
+    <div class="account-header-actions">
+      <form action="/logout" method="POST" style="margin: 0;">
+        <button type="submit" class="btn-account-logout">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+          <span>Keluar</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  {{if .Message}}
+  <div class="alert alert-success" style="margin-bottom: 20px;">
+    {{.Message}}
+  </div>
+  {{end}}
+
+  {{if .Error}}
+  <div class="alert alert-error" style="margin-bottom: 20px;">
+    {{.Error}}
+  </div>
+  {{end}}
+
+  <!-- Grid: Saldo AZcoin & Redeem Voucher -->
+  <div class="account-grid">
+    <!-- Left: Saldo Card -->
+    <div class="azcoin-wallet-card">
+      <div class="wallet-badge-row">
+        <span class="wallet-pill">🪙 Saldo Dompet</span>
+        <span class="wallet-discount-tag">Hemat {{.DiscountPercent}}% Tiap Top Up</span>
+      </div>
+      <div class="wallet-balance-box">
+        <div class="wallet-balance-value">{{formatNumber .User.Balance}}</div>
+        <div class="wallet-balance-unit">AZcoin (Setara {{formatRupiah .User.Balance}})</div>
+      </div>
+      <div class="wallet-rate-info">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+        <span>Nilai konversi: <strong>1 AZcoin = Rp 1</strong>. Saldo tidak memiliki masa kadaluarsa.</span>
+      </div>
+
+      <div class="wallet-deposit-info">
+        <strong>💡 Cara Isi Ulang Saldo AZcoin</strong>
+        <p>Beli kode voucher AZcoin langsung ke WhatsApp Admin (tanpa biaya admin gateway), lalu masukkan kodenya pada form di samping.</p>
+        <a href="https://wa.me/?text=Halo%20Admin%20Azeotopup,%20saya%20mau%20beli%20voucher%20AZcoin" target="_blank" class="btn-deposit-wa">
+          <span>Beli Voucher ke Admin</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+        </a>
+      </div>
+    </div>
+
+    <!-- Right: Redeem Voucher Card -->
+    <div class="section-box" style="margin-bottom: 0;">
+      <div class="section-header">
+        <span class="step-num" style="background: #4F46E5; color: #FFF;">🎟️</span>
+        <h2 class="section-title">Redeem Voucher AZcoin</h2>
+      </div>
+      <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 16px;">
+        Punya kode voucher dari admin? Masukkan kode voucher di bawah untuk langsung menambah saldo AZcoin Anda secara instan.
+      </p>
+
+      <form action="/account/redeem" method="POST" class="redeem-form">
+        <div class="form-group">
+          <label class="form-label" for="voucher_code">Kode Voucher AZcoin</label>
+          <input type="text" id="voucher_code" name="voucher_code" class="form-control" placeholder="Contoh: AZC-XXXX-XXXX-XXXX" required style="text-transform: uppercase; font-family: var(--font-mono); font-weight: 700; letter-spacing: 0.05em;">
+          <span class="form-help">Kode terdiri dari 16 karakter unik (contoh: AZC-7KQ2-M9XD-P4TR).</span>
+        </div>
+        <button type="submit" class="btn-checkout" style="background: #4F46E5; margin-top: 10px;">
+          Redeem Saldo Sekarang &rarr;
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Tabs: Riwayat Pesanan & Riwayat AZcoin -->
+  <div class="account-tabs-wrapper" style="margin-top: 36px;">
+    <div class="account-tab-buttons">
+      <button type="button" class="account-tab-btn active" data-tab="tab-orders">
+        <span>📦 Riwayat Pesanan ({{len .Orders}})</span>
+      </button>
+      <button type="button" class="account-tab-btn" data-tab="tab-transactions">
+        <span>🪙 Mutasi Saldo AZcoin ({{len .Transactions}})</span>
+      </button>
+    </div>
+
+    <!-- Tab 1: Orders -->
+    <div id="tab-orders" class="account-tab-panel active">
+      <div class="card" style="border: 1px solid var(--border-light); border-radius: var(--radius-md); overflow: hidden; background: #FFF;">
+        <div class="table-responsive">
+          <table class="detail-table" style="margin-top: 0;">
+            <thead>
+              <tr style="background: var(--bg-subtle); border-bottom: 1px solid var(--border-light);">
+                <th style="padding: 12px 16px; font-size: 0.78rem; text-transform: uppercase; color: var(--text-muted); text-align: left;">ID Pesanan</th>
+                <th style="padding: 12px 16px; font-size: 0.78rem; text-transform: uppercase; color: var(--text-muted); text-align: left;">Game & Produk</th>
+                <th style="padding: 12px 16px; font-size: 0.78rem; text-transform: uppercase; color: var(--text-muted); text-align: left;">Tujuan</th>
+                <th style="padding: 12px 16px; font-size: 0.78rem; text-transform: uppercase; color: var(--text-muted); text-align: left;">Metode</th>
+                <th style="padding: 12px 16px; font-size: 0.78rem; text-transform: uppercase; color: var(--text-muted); text-align: left;">Total</th>
+                <th style="padding: 12px 16px; font-size: 0.78rem; text-transform: uppercase; color: var(--text-muted); text-align: left;">Status</th>
+                <th style="padding: 12px 16px; font-size: 0.78rem; text-transform: uppercase; color: var(--text-muted); text-align: right;">Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{range .Orders}}
+              <tr style="border-bottom: 1px solid var(--border-light);">
+                <td style="padding: 14px 16px;">
+                  <strong style="font-family: var(--font-mono); font-size: 0.88rem; color: var(--text-main);">{{.ID}}</strong>
+                  <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">{{formatDateTime .CreatedAt}}</div>
+                </td>
+                <td style="padding: 14px 16px;">
+                  <div style="font-weight: 700; color: var(--text-main);">{{.ProductName}}</div>
+                  <div style="font-size: 0.78rem; color: var(--text-muted);">{{.GameName}}</div>
+                </td>
+                <td style="padding: 14px 16px; font-family: var(--font-mono); font-size: 0.85rem;">
+                  {{.FullCustomerNo}}
+                </td>
+                <td style="padding: 14px 16px; font-size: 0.82rem;">
+                  {{if .IsAZcoin}}
+                  <span style="display: inline-flex; align-items: center; gap: 4px; color: #4338CA; font-weight: 700;">🪙 Saldo AZC</span>
+                  {{else}}
+                  <span style="color: var(--text-muted); font-weight: 600;">QRIS</span>
+                  {{end}}
+                </td>
+                <td style="padding: 14px 16px; font-weight: 700; color: var(--text-main);">
+                  {{formatRupiah .Price}}
+                </td>
+                <td style="padding: 14px 16px;">
+                  <span class="status-badge {{statusBadgeClass .Status}}" style="font-size: 0.75rem; padding: 4px 10px;">
+                    {{.StatusBadge}}
+                  </span>
+                  {{if .DigiflazzSN}}
+                  <div style="font-size: 0.75rem; font-family: var(--font-mono); color: var(--success-text); margin-top: 4px;">
+                    SN: {{.DigiflazzSN}}
+                  </div>
+                  {{end}}
+                </td>
+                <td style="padding: 14px 16px; text-align: right;">
+                  <a href="/order/{{.ID}}" class="nav-btn" style="padding: 5px 12px; font-size: 0.78rem; border-radius: 6px;">
+                    Lihat Detail &rarr;
+                  </a>
+                </td>
+              </tr>
+              {{else}}
+              <tr>
+                <td colspan="7" style="text-align: center; padding: 36px; color: var(--text-muted);">
+                  Belum ada riwayat pesanan. Mulai beli voucher game favorit Anda sekarang!
+                </td>
+              </tr>
+              {{end}}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 2: Transactions -->
+    <div id="tab-transactions" class="account-tab-panel" style="display: none;">
+      <div class="card" style="border: 1px solid var(--border-light); border-radius: var(--radius-md); overflow: hidden; background: #FFF;">
+        <div class="table-responsive">
+          <table class="detail-table" style="margin-top: 0;">
+            <thead>
+              <tr style="background: var(--bg-subtle); border-bottom: 1px solid var(--border-light);">
+                <th style="padding: 12px 16px; font-size: 0.78rem; text-transform: uppercase; color: var(--text-muted); text-align: left;">Waktu</th>
+                <th style="padding: 12px 16px; font-size: 0.78rem; text-transform: uppercase; color: var(--text-muted); text-align: left;">Jenis Transaksi</th>
+                <th style="padding: 12px 16px; font-size: 0.78rem; text-transform: uppercase; color: var(--text-muted); text-align: left;">Keterangan / Referensi</th>
+                <th style="padding: 12px 16px; font-size: 0.78rem; text-transform: uppercase; color: var(--text-muted); text-align: right;">Jumlah</th>
+                <th style="padding: 12px 16px; font-size: 0.78rem; text-transform: uppercase; color: var(--text-muted); text-align: right;">Sisa Saldo</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{range .Transactions}}
+              <tr style="border-bottom: 1px solid var(--border-light);">
+                <td style="padding: 14px 16px; font-size: 0.8rem; color: var(--text-muted);">
+                  {{formatDateTime .CreatedAt}}
+                </td>
+                <td style="padding: 14px 16px;">
+                  {{if eq .Type "redeem"}}
+                  <span class="badge badge-success" style="font-size: 0.75rem;">+ Top Up Voucher</span>
+                  {{else if eq .Type "refund"}}
+                  <span class="badge badge-info" style="font-size: 0.75rem;">↩ Refund</span>
+                  {{else}}
+                  <span class="badge badge-pending" style="font-size: 0.75rem;">- Pembelian Game</span>
+                  {{end}}
+                </td>
+                <td style="padding: 14px 16px; font-size: 0.85rem;">
+                  <div>{{.Description}}</div>
+                  {{if .Reference}}
+                  <code style="font-size: 0.75rem; color: var(--text-muted);">Ref: {{.Reference}}</code>
+                  {{end}}
+                </td>
+                <td style="padding: 14px 16px; text-align: right; font-weight: 800; font-family: var(--font-mono);">
+                  {{if gt .Amount 0}}
+                  <span style="color: #166534;">+{{formatNumber .Amount}} AZC</span>
+                  {{else}}
+                  <span style="color: #991B1B;">{{formatNumber .Amount}} AZC</span>
+                  {{end}}
+                </td>
+                <td style="padding: 14px 16px; text-align: right; font-weight: 700; color: var(--text-main); font-family: var(--font-mono);">
+                  {{formatNumber .BalanceAfter}} AZC
+                </td>
+              </tr>
+              {{else}}
+              <tr>
+                <td colspan="5" style="text-align: center; padding: 36px; color: var(--text-muted);">
+                  Belum ada mutasi saldo AZcoin tercatat.
+                </td>
+              </tr>
+              {{end}}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const tabs = document.querySelectorAll(".account-tab-btn");
+  const panels = document.querySelectorAll(".account-tab-panel");
+
+  tabs.forEach(tab => {
+    tab.addEventListener("click", function() {
+      tabs.forEach(t => t.classList.remove("active"));
+      panels.forEach(p => {
+        p.classList.remove("active");
+        p.style.display = "none";
+      });
+
+      this.classList.add("active");
+      const target = document.getElementById(this.getAttribute("data-tab"));
+      if (target) {
+        target.classList.add("active");
+        target.style.display = "block";
+      }
+    });
+  });
+});
+</script>
+{{end}}

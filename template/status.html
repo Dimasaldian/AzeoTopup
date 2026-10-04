@@ -134,6 +134,17 @@
     </div>
     {{end}}
 
+    <!-- Help / Complaint Box -->
+    <div style="margin-top: 24px; padding: 16px 20px; background: #F8FAFC; border: 1.5px solid #E2E8F0; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; text-align: left;">
+      <div>
+        <strong style="color: var(--text-main); font-size: 0.88rem; display: block;">Mengalami kendala pada pesanan ini?</strong>
+        <span style="font-size: 0.78rem; color: var(--text-muted);">Laporkan ke tim Customer Service kami untuk penanganan cepat.</span>
+      </div>
+      <a href="/bantuan?order_id={{.Order.ID}}" class="btn btn-outline btn-sm" style="font-size: 0.8rem; padding: 6px 14px; text-decoration: none;">
+        Hubungi CS / Aduan &rarr;
+      </a>
+    </div>
+
     <div style="margin-top: 28px;">
       <a href="/" style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">&larr; Kembali ke Beranda</a>
     </div>

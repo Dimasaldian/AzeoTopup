@@ -1,0 +1,68 @@
+{{define "content"}}
+<div class="container auth-container">
+  <div class="auth-card">
+    <div class="auth-header">
+      <div class="auth-badge-az">🪙 Join AZcoin Member</div>
+      <h1 class="auth-title">Daftar Akun Baru</h1>
+      <p class="auth-subtitle">Dapatkan akun gratis dan nikmati harga item game termurah</p>
+    </div>
+
+    {{if .Error}}
+    <div class="alert alert-error auth-alert">
+      {{.Error}}
+    </div>
+    {{end}}
+
+    <div class="azcoin-perks-list">
+      <div class="perk-item">
+        <span class="perk-check">✓</span>
+        <span>Harga lebih murah otomatis di setiap item game</span>
+      </div>
+      <div class="perk-item">
+        <span class="perk-check">✓</span>
+        <span>Top up saldo mudah dengan kode voucher dari admin</span>
+      </div>
+      <div class="perk-item">
+        <span class="perk-check">✓</span>
+        <span>Riwayat transaksi lengkap & lacak SN pesanan otomatis</span>
+      </div>
+    </div>
+
+    <form action="/register" method="POST" class="auth-form">
+      {{if .RedirectURL}}
+      <input type="hidden" name="redirect" value="{{.RedirectURL}}">
+      {{end}}
+
+      <div class="form-group">
+        <label class="form-label" for="reg_name">Nama Lengkap *</label>
+        <input type="text" id="reg_name" name="name" class="form-control" placeholder="Contoh: Dimas Aldian" required autocomplete="name" autofocus>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="reg_email">Alamat Email *</label>
+        <input type="email" id="reg_email" name="email" class="form-control" placeholder="nama@email.com" required autocomplete="email">
+        <span class="form-help">Digunakan untuk login dan menerima bukti transaksi / invoice resmi.</span>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="reg_password">Password *</label>
+        <input type="password" id="reg_password" name="password" class="form-control" placeholder="Minimal 6 karakter" required minlength="6" autocomplete="new-password">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="reg_confirm">Konfirmasi Password *</label>
+        <input type="password" id="reg_confirm" name="confirm_password" class="form-control" placeholder="Ulangi password di atas" required minlength="6" autocomplete="new-password">
+      </div>
+
+      <button type="submit" class="btn-checkout" style="margin-top: 20px;">
+        Daftar Sekarang &rarr;
+      </button>
+    </form>
+
+    <div class="auth-footer-links">
+      <p>Sudah punya akun? <a href="/login{{if .RedirectURL}}?redirect={{.RedirectURL}}{{end}}" class="auth-link">Masuk ke Akun</a></p>
+      <p style="margin-top: 10px;"><a href="/" class="auth-link-subtle">&larr; Kembali ke Beranda</a></p>
+    </div>
+  </div>
+</div>
+{{end}}

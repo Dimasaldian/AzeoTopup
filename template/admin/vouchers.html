@@ -1,0 +1,174 @@
+{{define "content"}}
+<div>
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 22px; flex-wrap: wrap; gap: 12px;">
+    <div>
+      <h1 style="font-size: 1.35rem; font-weight: 800;">Manajemen Voucher & AZcoin</h1>
+      <p style="font-size: 0.82rem; color: var(--admin-muted); margin-top: 2px;">
+        Generate kode voucher saldo AZcoin untuk dijual manual ke pelanggan dan atur persentase diskon.
+      </p>
+    </div>
+  </div>
+
+  <!-- Metric Overview Cards -->
+  <div class="metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 24px;">
+    <div class="metric-card">
+      <div class="metric-label">Voucher Siap Dijual</div>
+      <div class="metric-value">{{.Stats.UnusedCount}} <span style="font-size: 0.85rem; color: var(--admin-muted); font-weight: 500;">voucher</span></div>
+      <div style="font-size: 0.8rem; color: #166534; margin-top: 4px; font-weight: 700;">Nilai: {{formatRupiah .Stats.UnusedValue}}</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Voucher Terpakai</div>
+      <div class="metric-value">{{.Stats.UsedCount}} <span style="font-size: 0.85rem; color: var(--admin-muted); font-weight: 500;">voucher</span></div>
+      <div style="font-size: 0.8rem; color: #0284C7; margin-top: 4px; font-weight: 700;">Total: {{formatRupiah .Stats.UsedValue}}</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Total Saldo di Member</div>
+      <div class="metric-value">{{formatNumber .Stats.TotalBalances}} <span style="font-size: 0.85rem; color: var(--admin-muted); font-weight: 500;">AZC</span></div>
+      <div style="font-size: 0.8rem; color: #4F46E5; margin-top: 4px; font-weight: 700;">Setara {{formatRupiah .Stats.TotalBalances}}</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Diskon AZcoin Aktif</div>
+      <div class="metric-value" style="color: #4F46E5;">{{.DiscountPercent}}%</div>
+      <div style="font-size: 0.8rem; color: var(--admin-muted); margin-top: 4px;">Lebih murah dibanding QRIS</div>
+    </div>
+  </div>
+
+  <!-- Settings & Generate Forms Grid -->
+  <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 28px;">
+    <!-- Generate Vouchers Card -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">🎟️ Buat Voucher Baru</h3>
+      </div>
+      <form action="/admin/vouchers/generate" method="POST" style="padding: 20px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px;">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="amount">Nominal Saldo (Rp / AZcoin) *</label>
+            <input type="number" id="amount" name="amount" class="form-input" placeholder="Contoh: 50000" min="1000" max="10000000" step="1000" required>
+            <div style="margin-top: 6px; display: flex; gap: 6px; flex-wrap: wrap;">
+              <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('amount').value=10000">10k</button>
+              <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('amount').value=20000">20k</button>
+              <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('amount').value=50000">50k</button>
+              <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('amount').value=100000">100k</button>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="qty">Jumlah Voucher *</label>
+            <input type="number" id="qty" name="qty" class="form-input" value="1" min="1" max="100" required>
+            <span style="font-size: 0.72rem; color: var(--admin-muted);">Maksimal 100 voucher sekaligus</span>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0; grid-column: span 2;">
+            <label class="form-label" for="note">Catatan / Keterangan (Opsional)</label>
+            <input type="text" id="note" name="note" class="form-input" placeholder="Misal: Batch WhatsApp Pembeli @Dimas">
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="margin-top: 16px;">
+          Generate Kode Voucher &rarr;
+        </button>
+      </form>
+    </div>
+
+    <!-- Discount Settings Card -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">⚙️ Atur Diskon Global</h3>
+      </div>
+      <form action="/admin/vouchers/discount" method="POST" style="padding: 20px;">
+        <div class="form-group">
+          <label class="form-label" for="discount_percent">Persentase Diskon AZcoin (%)</label>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <input type="number" id="discount_percent" name="discount_percent" class="form-input" value="{{.DiscountPercent}}" min="0" max="50" required>
+            <span style="font-weight: 700;">%</span>
+          </div>
+          <span style="font-size: 0.72rem; color: var(--admin-muted); display: block; margin-top: 6px;">
+            Diskon otomatis dihitung saat pembeli memilih bayar dengan AZcoin (tidak akan memotong di bawah harga modal).
+          </span>
+        </div>
+        <button type="submit" class="btn btn-outline btn-sm" style="width: 100%;">
+          Simpan Persentase Diskon
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Filter & Table Vouchers -->
+  <div class="card">
+    <div class="card-header" style="flex-wrap: wrap; gap: 10px;">
+      <h3 class="card-title">Daftar Kode Voucher</h3>
+      <div class="filter-bar" style="margin: 0;">
+        <a href="/admin/vouchers" class="btn btn-sm {{if eq .StatusFilter ""}}btn-primary{{else}}btn-outline{{end}}">Semua</a>
+        <a href="/admin/vouchers?status=unused" class="btn btn-sm {{if eq .StatusFilter "unused"}}btn-primary{{else}}btn-outline{{end}}">Belum Terpakai</a>
+        <a href="/admin/vouchers?status=used" class="btn btn-sm {{if eq .StatusFilter "used"}}btn-primary{{else}}btn-outline{{end}}">Sudah Terpakai</a>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Kode Voucher</th>
+            <th>Nominal</th>
+            <th>Catatan</th>
+            <th>Status</th>
+            <th>Dipakai Oleh</th>
+            <th>Waktu Dibuat</th>
+            <th style="text-align: right;">Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{range .Vouchers}}
+          <tr>
+            <td>
+              <strong style="font-family: var(--font-mono); font-size: 0.95rem; color: #4F46E5; letter-spacing: 0.04em;">{{.Code}}</strong>
+              <button type="button" class="btn btn-outline btn-sm" style="padding: 2px 7px; font-size: 0.7rem; margin-left: 6px;" onclick="navigator.clipboard.writeText('{{.Code}}'); alert('Kode disalin: {{.Code}}');">Salin</button>
+            </td>
+            <td>
+              <strong>{{formatRupiah .Amount}}</strong>
+            </td>
+            <td style="font-size: 0.8rem; color: var(--admin-muted);">
+              {{if .Note}}{{.Note}}{{else}}-{{end}}
+            </td>
+            <td>
+              {{if .IsUsed}}
+              <span class="badge badge-pending">Terpakai</span>
+              {{else}}
+              <span class="badge badge-success">Siap Dijual</span>
+              {{end}}
+            </td>
+            <td style="font-size: 0.82rem;">
+              {{if .IsUsed}}
+                <div><strong>{{.UsedByEmail}}</strong></div>
+                <div style="font-size: 0.72rem; color: var(--admin-muted);">{{formatDateTimePtr .UsedAt}}</div>
+              {{else}}
+                <span style="color: var(--admin-muted);">-</span>
+              {{end}}
+            </td>
+            <td style="font-size: 0.78rem; color: var(--admin-muted);">
+              {{formatDateTime .CreatedAt}}
+            </td>
+            <td style="text-align: right;">
+              {{if not .IsUsed}}
+              <form action="/admin/vouchers/{{.ID}}/delete" method="POST" style="margin: 0; display: inline;" onsubmit="return confirm('Hapus voucher {{.Code}}?')">
+                <button type="submit" class="btn btn-danger btn-sm">Hapus</button>
+              </form>
+              {{else}}
+              <span style="font-size: 0.75rem; color: var(--admin-muted);">Selesai</span>
+              {{end}}
+            </td>
+          </tr>
+          {{else}}
+          <tr>
+            <td colspan="7" style="text-align: center; padding: 36px; color: var(--admin-muted);">
+              Belum ada voucher yang dibuat. Gunakan form di atas untuk membuat voucher baru.
+            </td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{{end}}

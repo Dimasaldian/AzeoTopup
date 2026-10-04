@@ -6,6 +6,7 @@
       <div class="metric-label">Pesanan Hari Ini</div>
       <div class="metric-value">{{.Stats.TodayOrderCount}}</div>
     </div>
+    {{if eq .AdminUser.Role "superadmin"}}
     <div class="metric-card">
       <div class="metric-label">Pendapatan Hari Ini</div>
       <div class="metric-value">{{formatRupiah .Stats.TodayRevenue}}</div>
@@ -18,6 +19,7 @@
       <div class="metric-label">Saldo Digiflazz</div>
       <div class="metric-value">{{formatRupiah .Stats.DigiflazzBalance}}</div>
     </div>
+    {{end}}
     <div class="metric-card">
       <div class="metric-label">Game Aktif</div>
       <div class="metric-value">{{.Stats.ActiveGameCount}}</div>

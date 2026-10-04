@@ -27,6 +27,8 @@ type Config struct {
 	SMTPPass               string
 	SMTPFrom               string
 	SMTPFromName           string
+	ApiGamesMerchantID     string
+	ApiGamesSecretKey      string
 }
 
 func LoadConfig() *Config {
@@ -40,6 +42,8 @@ func LoadConfig() *Config {
 		DigiflazzWebhookSecret: getEnv("DIGIFLAZZ_WEBHOOK_SECRET", "topupku-secret"),
 		AutoGoPayAPIKey:        getEnv("AUTOGOPAY_API_KEY", ""),
 		AutoGoPayBaseURL:       getEnv("AUTOGOPAY_BASE_URL", "https://v1-gateway.autogopay.site"),
+		ApiGamesMerchantID:     getEnv("APIGAMES_MERCHANT_ID", ""),
+		ApiGamesSecretKey:      getEnv("APIGAMES_SECRET_KEY", ""),
 		DBPath:                 getEnv("DB_PATH", "./data/topupku.db"),
 		PriceMarginPercent:     getEnvFloat("PRICE_MARGIN_PERCENT", 10.0),
 		AdminSessionSecret:     getEnv("ADMIN_SESSION_SECRET", "super-secret-admin-key-change-in-prod-12345678"),

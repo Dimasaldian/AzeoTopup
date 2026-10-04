@@ -33,6 +33,8 @@ type Order struct {
 	DigiflazzStatus    string     `json:"digiflazz_status"`
 	DigiflazzMessage   string     `json:"digiflazz_message"`
 	AdminNote          string     `json:"admin_note"`
+	UserID             int64      `json:"user_id"`
+	PaymentMethod      string     `json:"payment_method"`
 	CreatedAt          time.Time  `json:"created_at"`
 	UpdatedAt          time.Time  `json:"updated_at"`
 
@@ -60,6 +62,17 @@ func (o *Order) StatusBadge() string {
 	default:
 		return o.Status
 	}
+}
+
+func (o *Order) IsAZcoin() bool {
+	return o.PaymentMethod == PaymentMethodAZcoin
+}
+
+func (o *Order) PaymentMethodLabel() string {
+	if o.IsAZcoin() {
+		return "Saldo AZcoin"
+	}
+	return "QRIS / E-Wallet"
 }
 
 func (o *Order) FullCustomerNo() string {

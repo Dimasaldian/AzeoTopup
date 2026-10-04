@@ -1,0 +1,57 @@
+{{define "content"}}
+<div class="container auth-container">
+  <div class="auth-card">
+    <div class="auth-header">
+      <div class="auth-badge-az">🪙 AZcoin</div>
+      <h1 class="auth-title">Masuk ke Akun</h1>
+      <p class="auth-subtitle">Gunakan AZcoin untuk nikmati harga top up game lebih murah</p>
+    </div>
+
+    {{if .Error}}
+    <div class="alert alert-error auth-alert">
+      {{.Error}}
+    </div>
+    {{end}}
+
+    {{if .Message}}
+    <div class="alert alert-success auth-alert">
+      {{.Message}}
+    </div>
+    {{end}}
+
+    <!-- Benefit Banner -->
+    <div class="azcoin-benefit-box">
+      <div class="azcoin-benefit-icon">⚡</div>
+      <div class="azcoin-benefit-text">
+        <strong>Keuntungan Member AZcoin</strong>
+        <span>Dapatkan diskon spesial harga lebih murah di setiap transaksi dengan saldo AZcoin.</span>
+      </div>
+    </div>
+
+    <form action="/login" method="POST" class="auth-form">
+      {{if .RedirectURL}}
+      <input type="hidden" name="redirect" value="{{.RedirectURL}}">
+      {{end}}
+
+      <div class="form-group">
+        <label class="form-label" for="login_email">Alamat Email</label>
+        <input type="email" id="login_email" name="email" class="form-control" placeholder="nama@email.com" required autocomplete="email" autofocus>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="login_password">Password</label>
+        <input type="password" id="login_password" name="password" class="form-control" placeholder="••••••••" required autocomplete="current-password">
+      </div>
+
+      <button type="submit" class="btn-checkout" style="margin-top: 20px;">
+        Masuk Sekarang &rarr;
+      </button>
+    </form>
+
+    <div class="auth-footer-links">
+      <p>Belum punya akun? <a href="/register{{if .RedirectURL}}?redirect={{.RedirectURL}}{{end}}" class="auth-link">Daftar Akun Baru</a></p>
+      <p style="margin-top: 10px;"><a href="/" class="auth-link-subtle">&larr; Kembali ke Beranda</a></p>
+    </div>
+  </div>
+</div>
+{{end}}
