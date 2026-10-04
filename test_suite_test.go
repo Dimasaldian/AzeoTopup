@@ -44,8 +44,10 @@ func setupTestApp(t *testing.T) (*http.ServeMux, *store.SQLiteStore, func()) {
 	adminSvc := service.NewAdminService(st, dfClient)
 	userSvc := service.NewUserService(st)
 
+	apiGamesClient := service.NewApiGamesClient("", "")
+
 	pageHandler := handler.NewPageHandler(st, orderSvc, true)
-	orderHandler := handler.NewOrderHandler(st, orderSvc)
+	orderHandler := handler.NewOrderHandler(st, orderSvc, apiGamesClient)
 	userHandler := handler.NewUserHandler(st, userSvc, 86400*30)
 
 	dashHandler := admin.NewDashboardHandler(st, dfClient)
