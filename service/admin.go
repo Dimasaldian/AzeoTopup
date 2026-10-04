@@ -104,6 +104,9 @@ func (s *AdminService) ImportProducts(gameID int64, items []ImportProductItem, a
 }
 
 func (s *AdminService) SyncPriceList(adminID int64) (int, error) {
+	// Invalidate in-memory cache to ensure fresh real-time prices from Digiflazz
+	s.digiflazz.InvalidateCache()
+
 	items, err := s.digiflazz.GetPriceList("")
 	if err != nil {
 		return 0, err

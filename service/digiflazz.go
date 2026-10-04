@@ -193,6 +193,13 @@ func (d *DigiflazzClient) GetPriceList(brandFilter string) ([]DigiflazzProductIt
 	return d.filterPriceList(result.Data, brandFilter), nil
 }
 
+func (d *DigiflazzClient) InvalidateCache() {
+	d.mu.Lock()
+	d.cachedPriceList = nil
+	d.cachedTime = time.Time{}
+	d.mu.Unlock()
+}
+
 func (d *DigiflazzClient) filterPriceList(items []DigiflazzProductItem, brandFilter string) []DigiflazzProductItem {
 	if brandFilter == "" {
 		return items

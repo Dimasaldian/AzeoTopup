@@ -745,14 +745,14 @@ func (s *SQLiteStore) UpdateProduct(p *model.Product) error {
 
 	_, err := s.db.Exec(`
 		UPDATE products SET
-			custom_sku = ?, display_name = ?, description = ?,
+			digiflazz_sku = ?, custom_sku = ?, display_name = ?, description = ?,
 			group_id = ?, cost_price = ?, sell_price = ?,
 			margin_type = ?, margin_value = ?, icon_emoji = ?,
 			sort_order = ?, is_active = ?, is_popular = ?,
 			is_promo = ?, promo_price = ?, promo_quota = ?, promo_remaining = ?,
 			updated_at = CURRENT_TIMESTAMP
 		WHERE id = ?
-	`, p.CustomSKU, p.DisplayName, p.Description, p.GroupID, p.CostPrice, p.SellPrice,
+	`, p.DigiflazzSKU, p.CustomSKU, p.DisplayName, p.Description, p.GroupID, p.CostPrice, p.SellPrice,
 		p.MarginType, p.MarginValue, p.IconEmoji, p.SortOrder, boolToInt(p.IsActive), boolToInt(p.IsPopular),
 		boolToInt(p.IsPromo), p.PromoPrice, p.PromoQuota, p.PromoRemaining, p.ID)
 	return err

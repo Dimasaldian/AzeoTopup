@@ -8,16 +8,23 @@
   <div class="card" style="padding: 26px;">
     <form action="/admin/products/{{.Product.ID}}" method="POST">
       
-      <!-- Digiflazz Read-Only Info -->
+      <!-- Digiflazz Provider Info & SKU Mapping -->
       <div style="background: #F8FAFC; border: 1px solid var(--admin-border); padding: 16px 18px; border-radius: 8px; margin-bottom: 22px;">
         <h4 style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--admin-muted); letter-spacing: 0.06em; margin-bottom: 10px;">
           Data Provider (Digiflazz)
         </h4>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.82rem;">
-          <div>SKU: <code>{{.Product.DigiflazzSKU}}</code></div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.82rem; margin-bottom: 12px;">
           <div>Harga Modal: <strong>{{formatRupiah .Product.CostPrice}}</strong></div>
           <div>Nama Asli: <span>{{.Product.DigiflazzName}}</span></div>
           <div>Status Stok: <span class="badge badge-success">{{.Product.StockStatus}}</span></div>
+          <div>Sync Terakhir: <span>{{formatDateTimePtr .Product.LastSyncAt}}</span></div>
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label" for="digiflazz_sku">Kode SKU Digiflazz (Buyer SKU Code) *</label>
+          <input type="text" id="digiflazz_sku" name="digiflazz_sku" class="form-input" value="{{.Product.DigiflazzSKU}}" required>
+          <small style="color: var(--admin-muted); font-size: 0.75rem;">
+            💡 Jika kamu beralih ke seller lain di Digiflazz yang harganya lebih murah, ganti kode SKU ini dengan SKU seller baru tersebut lalu klik Simpan.
+          </small>
         </div>
       </div>
 

@@ -53,7 +53,8 @@ func (h *SyncAdminHandler) ProductImport(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	// Fetch price list from Digiflazz
+	// Invalidate cache to ensure fresh sellers and prices from Digiflazz
+	h.digiflazz.InvalidateCache()
 	dfItems, err := h.digiflazz.GetPriceList(game.Brand)
 	if err != nil {
 		http.Redirect(w, r, fmt.Sprintf("/admin/games/%d/products?error=%s", gameID, url.QueryEscape("Gagal mengambil data Digiflazz: "+err.Error())), http.StatusSeeOther)

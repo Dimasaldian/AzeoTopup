@@ -175,6 +175,11 @@ func (h *ProductAdminHandler) ProductUpdate(w http.ResponseWriter, r *http.Reque
 		promoRemaining = promoQuota
 	}
 
+	digiflazzSKU := strings.TrimSpace(r.FormValue("digiflazz_sku"))
+	if digiflazzSKU != "" {
+		prod.DigiflazzSKU = digiflazzSKU
+	}
+
 	prod.CustomSKU = customSKU
 	prod.DisplayName = displayName
 	prod.MarginType = marginType
